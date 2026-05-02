@@ -47,6 +47,49 @@ export const boxSchema = z.object({
   sortOrder: z.number().int().default(0),
 })
 
+export const couponSchema = z.object({
+  code: z.string().min(2).max(40).regex(/^[A-Z0-9_-]+$/, 'Solo mayúsculas, números, "-" y "_"'),
+  type: z.enum(['PERCENTAGE', 'FIXED_AMOUNT', 'FREE_SHIPPING']),
+  value: z.number().int().min(0),
+  minOrderClp: z.number().int().min(0).optional().nullable(),
+  maxUses: z.number().int().min(0).optional().nullable(),
+  maxUsesPerUser: z.number().int().min(0).optional().nullable(),
+  validFrom: z.string().min(1),
+  validTo: z.string().min(1).optional().nullable(),
+  isActive: z.boolean().default(true),
+})
+
+export const coverageZoneSchema = z.object({
+  commune: z.string().min(1).max(80),
+  region: z.string().min(1).max(80),
+  shippingClp: z.number().int().min(0),
+  freeShippingThresholdClp: z.number().int().min(0).optional().nullable(),
+  freeShippingMinBoxes: z.number().int().min(0).optional().nullable(),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+})
+
+export const adminUserCreateSchema = z.object({
+  email: z.string().email().max(160),
+  name: z.string().min(1).max(120),
+  role: z.enum(['OWNER', 'OPERATOR', 'VIEWER']),
+  password: z.string().min(8).max(200),
+  isActive: z.boolean().default(true),
+})
+
+export const adminUserUpdateSchema = z.object({
+  name: z.string().min(1).max(120),
+  role: z.enum(['OWNER', 'OPERATOR', 'VIEWER']),
+  isActive: z.boolean().default(true),
+  password: z.string().min(8).max(200).optional().nullable(),
+})
+
+export const settingsSchema = z.record(z.string().max(80), z.string().max(2000))
+
 export type DroopInput = z.infer<typeof droopSchema>
 export type FlavorInput = z.infer<typeof flavorSchema>
 export type BoxInput = z.infer<typeof boxSchema>
+export type CouponInput = z.infer<typeof couponSchema>
+export type CoverageZoneInput = z.infer<typeof coverageZoneSchema>
+export type AdminUserCreateInput = z.infer<typeof adminUserCreateSchema>
+export type AdminUserUpdateInput = z.infer<typeof adminUserUpdateSchema>

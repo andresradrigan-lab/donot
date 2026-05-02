@@ -11,7 +11,14 @@ interface Props {
   user: { name: string; email: string; role: AdminRole }
 }
 
-const NAV = [
+interface NavItem {
+  href: string
+  label: string
+  exact?: boolean
+  ownerOnly?: boolean
+}
+
+const NAV: NavItem[] = [
   { href: '/admin', label: 'Dashboard', exact: true },
   { href: '/admin/pedidos', label: 'Pedidos' },
   { href: '/admin/cocina', label: 'Cocina' },
@@ -19,6 +26,10 @@ const NAV = [
   { href: '/admin/droops', label: 'Droops' },
   { href: '/admin/sabores', label: 'Sabores' },
   { href: '/admin/cajas', label: 'Cajas' },
+  { href: '/admin/cupones', label: 'Cupones' },
+  { href: '/admin/cobertura', label: 'Cobertura' },
+  { href: '/admin/usuarios', label: 'Usuarios', ownerOnly: true },
+  { href: '/admin/config', label: 'Config' },
 ]
 
 export function AdminHeader({ user }: Props) {
@@ -47,8 +58,8 @@ export function AdminHeader({ user }: Props) {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-4 lg:gap-6 text-sm font-semibold overflow-x-auto -mx-2 px-2">
-          {NAV.map((item) => {
+        <nav className="flex items-center gap-4 lg:gap-5 text-sm font-semibold overflow-x-auto -mx-2 px-2">
+          {NAV.filter((item) => !item.ownerOnly || user.role === 'OWNER').map((item) => {
             const active = item.exact
               ? pathname === item.href
               : pathname?.startsWith(item.href)

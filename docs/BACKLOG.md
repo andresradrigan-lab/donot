@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 9 — Cupones, cobertura, configuración`
-> **Estado:** No iniciado (Sprint 0–4, 6, 7, 8 completados el 2026-05-02; Sprint 5 diferido)
+> **Sprint activo:** `Sprint 10 — Analítica + Dashboard interno`
+> **Estado:** No iniciado (Sprint 0–4, 6–9 completados el 2026-05-02; Sprint 5 diferido)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -209,10 +209,10 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** Auto-administración completa.
 
-- [ ] Página `/admin/cupones` con CRUD y métricas (usos, ingresos)
-- [ ] Página `/admin/cobertura` con CRUD de zonas
-- [ ] Página `/admin/usuarios` (solo OWNER) con invitación por email
-- [ ] Página `/admin/config` con: datos de contacto, claves de pasarelas, GA4, Pixel, umbrales, plantillas de mail
+- [x] Página `/admin/cupones` con CRUD y métricas (usos, ingresos generados, descuento total)
+- [x] Página `/admin/cobertura` con CRUD de zonas + thresholds de envío gratis por comuna
+- [x] Página `/admin/usuarios` (solo OWNER) con creación + roles + reset de password (invitación por email queda como mejora futura)
+- [x] Página `/admin/config` con: datos de contacto, umbrales de envío, prefijo de pedidos, puntos de retiro. Las claves sensibles (MP, Resend, GA4, Pixel, CAPI, Cloudinary, JWT) viven en .env por seguridad — la página lo explica explícitamente
 
 **Definition of done:** todo lo configurable está en el admin, nada en código.
 

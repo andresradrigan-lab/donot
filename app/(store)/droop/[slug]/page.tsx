@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
+import { DroopAnalytics } from '@/components/store/DroopAnalytics'
 
 interface PageProps {
   params: { slug: string }
@@ -39,6 +40,7 @@ export default async function DroopPage({ params }: PageProps) {
 
   return (
     <>
+      <DroopAnalytics droopCode={droop.code} droopName={droop.name} />
       <section className="bg-donot-verde text-donot-crema">
         <div className="max-w-8xl mx-auto px-6 md:px-10 py-16 md:py-24 grid gap-10 md:grid-cols-[1.2fr_1fr] items-center">
           <div className="flex flex-col gap-5">

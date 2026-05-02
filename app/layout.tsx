@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Sniglet, Inter } from 'next/font/google'
 import './globals.css'
+import { GtmScript } from '@/components/store/GtmScript'
 
 const sniglet = Sniglet({
   subsets: ['latin'],
@@ -28,7 +29,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es-CL" className={`${sniglet.variable} ${inter.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <GtmScript />
+        {children}
+      </body>
     </html>
   )
 }

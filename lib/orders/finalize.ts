@@ -2,6 +2,7 @@ import type { OrderItem } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { sendEmail } from '@/lib/email'
 import { orderConfirmationHtml } from '@/lib/email/templates'
+import { sendMetaPurchase } from '@/lib/analytics-server'
 
 interface FlavorLine {
   flavorSlug: string
@@ -100,4 +101,10 @@ export async function markOrderPaid(orderId: string): Promise<void> {
     subject: 'Listo. Tus donitas están reservadas.',
     html: orderConfirmationHtml({ order: fresh, appUrl }),
   })
+
+  // Meta Conversions API (server-side, deduplicado con el Pixel del browser
+  // por event_id = order.id). Falla en silencio si no está configurada.
+  await sendMetaPurchase(fresh, appUrl).catch((err) =>
+    console.warn('Meta CAPI ignored:', err),
+  )
 }

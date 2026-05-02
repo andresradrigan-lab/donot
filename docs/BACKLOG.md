@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 10 — Analítica + Dashboard interno`
-> **Estado:** No iniciado (Sprint 0–4, 6–9 completados el 2026-05-02; Sprint 5 diferido)
+> **Sprint activo:** `Sprint 11 — QA, hardening y soft launch`
+> **Estado:** No iniciado (Sprint 0–4, 6–10 completados el 2026-05-02; Sprint 5 diferido)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -222,16 +222,16 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** GTM, GA4, Meta Pixel, CAPI conectados y funcionando. Dashboard interno con KPIs.
 
-- [ ] Setup GTM (1 contenedor)
-- [ ] Eventos del dataLayer disparándose: view_item, select_item, add_to_cart, view_cart, begin_checkout, add_payment_info, purchase, coupon_applied, droop_view
-- [ ] Conversions API server-side desde el webhook de pago confirmado
-- [ ] Dashboard `/admin` ya existente, ahora con datos reales:
-  - Pedidos del día/semana/mes
-  - Ingresos brutos y netos
-  - Ticket promedio
-  - Embudo
+- [x] Setup GTM (1 contenedor) — `<GtmScript />` se activa con `NEXT_PUBLIC_GTM_ID`
+- [x] Eventos del dataLayer disparándose: view_item, select_item, add_to_cart, view_cart, begin_checkout, add_payment_info, purchase, coupon_applied, droop_view (cliente helper en `lib/analytics.ts`)
+- [x] Conversions API server-side desde el webhook de pago confirmado (`lib/analytics-server.ts` → `sendMetaPurchase` en `markOrderPaid`, con `event_id = order.id` para deduplicar contra el Pixel del browser)
+- [x] Dashboard `/admin` ya existente, ahora con datos reales:
+  - Pedidos por rango (hoy / 7 días / 30 días / año)
+  - Ingresos + ticket promedio
+  - Tasa de conversión (pagados / creados)
+  - Embudo (creados → pagados / pendientes / cancelados)
   - Top sabores y top cajas
-  - Performance por Droop
+  - Performance por Droop (revenue dentro de la ventana del droop)
 
 **Definition of done:** GA4 muestra el embudo completo. El dashboard interno cuadra con GA4 ± 5%.
 

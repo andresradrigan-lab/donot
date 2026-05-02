@@ -8,6 +8,7 @@ import { formatClp } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 import { CouponInput, type AppliedCoupon } from '@/components/store/CouponInput'
 import { cn } from '@/lib/utils'
+import { analytics } from '@/lib/analytics'
 
 interface Zone {
   id: string
@@ -67,7 +68,20 @@ export function CheckoutForm({ initialCouponCode }: Props) {
 
   // Cargar carrito y cobertura.
   useEffect(() => {
-    setCart(readCart())
+    const initial = readCart()
+    setCart(initial)
+    if (initial.items.length > 0) {
+      analytics.beginCheckout({
+        currency: 'CLP',
+        value: initial.items.reduce((s, it) => s + it.boxPriceClp * it.quantity, 0),
+        items: initial.items.map((it) => ({
+          item_id: it.boxSlug,
+          item_name: it.boxName,
+          price: it.boxPriceClp,
+          quantity: it.quantity,
+        })),
+      })
+    }
     fetch('/api/coverage')
       .then((r) => r.json())
       .then((d) => setZones(d.zones ?? []))
@@ -144,6 +158,14 @@ export function CheckoutForm({ initialCouponCode }: Props) {
     if (!canSubmit || !cart) return
     setSubmitting(true)
     setSubmitError(null)
+
+    if (totals?.totalClp != null) {
+      analytics.addPaymentInfo({
+        payment_type: payment,
+        value: totals.totalClp,
+      })
+    }
+
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',

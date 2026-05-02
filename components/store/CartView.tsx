@@ -13,6 +13,7 @@ import { formatClp } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 import { MascotaEmpty } from '@/components/store/MascotaEmpty'
 import { CouponInput, type AppliedCoupon } from '@/components/store/CouponInput'
+import { analytics } from '@/lib/analytics'
 
 interface FreeShipping {
   thresholdClp: number | null
@@ -25,7 +26,20 @@ export function CartView() {
   const [freeShipping, setFreeShipping] = useState<FreeShipping | null>(null)
 
   useEffect(() => {
-    setCart(readCart())
+    const initial = readCart()
+    setCart(initial)
+    if (initial.items.length > 0) {
+      analytics.viewCart({
+        currency: 'CLP',
+        value: initial.items.reduce((s, it) => s + it.boxPriceClp * it.quantity, 0),
+        items: initial.items.map((it) => ({
+          item_id: it.boxSlug,
+          item_name: it.boxName,
+          price: it.boxPriceClp,
+          quantity: it.quantity,
+        })),
+      })
+    }
     const onUpdate = () => setCart(readCart())
     window.addEventListener('donot:cart-updated', onUpdate)
     window.addEventListener('storage', onUpdate)
@@ -192,7 +206,19 @@ export function CartView() {
       <aside className="bg-donot-rowAlt border border-donot-border rounded-3xl p-6 lg:sticky lg:top-24 flex flex-col gap-5">
         <h2 className="font-display text-2xl text-donot-verde">Resumen</h2>
 
-        <CouponInput cart={cart} applied={coupon} onChange={setCoupon} />
+        <CouponInput
+          cart={cart}
+          applied={coupon}
+          onChange={(c) => {
+            setCoupon(c)
+            if (c)
+              analytics.couponApplied({
+                code: c.code,
+                type: c.type,
+                discount_clp: c.discountClp,
+              })
+          }}
+        />
 
         <dl className="text-donot-ink space-y-2">
           <div className="flex justify-between">

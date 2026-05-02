@@ -15,6 +15,7 @@ import {
   writeInProgress,
   type CartItem,
 } from '@/lib/cart'
+import { analytics } from '@/lib/analytics'
 
 interface Props {
   box: Box
@@ -97,6 +98,21 @@ export function FlavorPicker({ box, flavors }: Props) {
     }
     addItem(item)
     clearInProgress(box.slug)
+
+    analytics.addToCart({
+      currency: 'CLP',
+      value: box.priceClp,
+      items: [
+        {
+          item_id: box.slug,
+          item_name: box.name,
+          price: box.priceClp,
+          quantity: 1,
+          item_category: box.category,
+        },
+      ],
+    })
+
     router.push('/carrito')
   }
 

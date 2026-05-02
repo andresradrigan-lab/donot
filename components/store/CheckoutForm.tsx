@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { CreditCard, Banknote, Wallet, MapPin, Calendar, User, Tag, Receipt } from 'lucide-react'
+import { CreditCard, Wallet, MapPin, Calendar, User, Tag, Receipt } from 'lucide-react'
 import { readCart, type Cart } from '@/lib/cart'
 import { formatClp } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
@@ -36,10 +36,10 @@ interface ValidateResponse {
 
 const TIME_SLOTS = ['10-13', '13-17', '17-20'] as const
 
+// MVP arranca solo con Mercado Pago. Webpay y Khipu (Sprint 5) se
+// activan agregando entradas a este array — el backend ya está preparado.
 const PAYMENT_OPTIONS: { id: PaymentProvider; label: string; icon: typeof CreditCard }[] = [
   { id: 'MERCADO_PAGO', label: 'Mercado Pago', icon: Wallet },
-  { id: 'TRANSBANK', label: 'Webpay (tarjeta)', icon: CreditCard },
-  { id: 'KHIPU', label: 'Khipu (transferencia)', icon: Banknote },
 ]
 
 interface Props {

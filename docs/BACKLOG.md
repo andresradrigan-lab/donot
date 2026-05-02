@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 5 — Webpay + Khipu`
-> **Estado:** No iniciado (Sprint 0–4 completados el 2026-05-02)
+> **Sprint activo:** `Sprint 6 — Auth admin + módulo Pedidos`
+> **Estado:** No iniciado (Sprint 0–4 completados el 2026-05-02; Sprint 5 diferido)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -132,7 +132,12 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 ---
 
-## Sprint 5 — Webpay + Khipu
+## Sprint 5 — Webpay + Khipu (DIFERIDO)
+
+> **Decisión 2026-05-02:** se posterga. MVP arranca solo con Mercado Pago.
+> Cuando se reactive: el `lib/payments/index.ts` ya tiene factory por nombre,
+> los adapters nuevos solo deben implementar la interface `PaymentProvider` y
+> el selector de pasarela en checkout vuelve a habilitarlos.
 
 **Objetivo:** Las otras dos pasarelas operativas con la misma calidad que MP.
 

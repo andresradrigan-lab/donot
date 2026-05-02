@@ -1,8 +1,12 @@
 import Script from 'next/script'
 
-export function GtmScript() {
-  const id = process.env.NEXT_PUBLIC_GTM_ID
-  if (!id || id === 'GTM-XXXXXX') return null
+interface Props {
+  gtmId?: string | null
+}
+
+export function GtmScript({ gtmId }: Props) {
+  const id = gtmId?.trim()
+  if (!id || !/^GTM-[A-Z0-9]+$/i.test(id)) return null
 
   return (
     <>

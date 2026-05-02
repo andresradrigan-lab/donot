@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Order, OrderItem } from '@prisma/client'
+import { getStringSetting } from '@/lib/settings'
 
 /**
  * Conversions API de Meta (server-side). Se llama después de confirmar
@@ -26,8 +27,14 @@ export async function sendMetaPurchase(
   order: Order & { items: OrderItem[] },
   appUrl: string,
 ): Promise<{ sent: boolean; reason?: string }> {
-  const pixelId = process.env.META_PIXEL_ID
-  const accessToken = process.env.META_CAPI_ACCESS_TOKEN
+  // Preferimos los valores de SiteSetting (editables desde /admin/config)
+  // y solo caemos a env si no hay nada configurado en BD.
+  const [pixelFromDb, capiFromDb] = await Promise.all([
+    getStringSetting('analytics_meta_pixel_id'),
+    getStringSetting('analytics_meta_capi_token'),
+  ])
+  const pixelId = pixelFromDb || process.env.META_PIXEL_ID
+  const accessToken = capiFromDb || process.env.META_CAPI_ACCESS_TOKEN
   if (!pixelId || !accessToken || pixelId === '000000000000000') {
     return { sent: false, reason: 'not-configured' }
   }

@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 3 — Carrito y checkout (sin pagos aún)`
-> **Estado:** No iniciado (Sprint 0, 1 y 2 completados el 2026-05-02)
+> **Sprint activo:** `Sprint 4 — Mercado Pago end-to-end`
+> **Estado:** No iniciado (Sprint 0, 1, 2 y 3 completados el 2026-05-02)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -84,21 +84,21 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** Carrito funcional, checkout con datos de despacho, validación de cobertura y cupón. Sin pasarelas todavía — solo el formulario y la lógica de cálculo.
 
-- [ ] Página `/carrito`: muestra cajas configuradas, permite editar cantidades, sumar otra caja, aplicar cupón, ver totales
-- [ ] Componente `<CouponInput>` con validación contra `POST /api/coupons/validate`
-- [ ] Endpoint `POST /api/coupons/validate` — valida vigencia, max_uses, min_order, retorna descuento aplicable
-- [ ] Endpoint `GET /api/coverage` — lista comunas activas con tarifas
-- [ ] Página `/checkout` con secciones acordeón:
+- [x] Página `/carrito`: muestra cajas configuradas, permite editar cantidades, sumar otra caja, aplicar cupón, ver totales
+- [x] Componente `<CouponInput>` con validación contra `POST /api/coupons/validate`
+- [x] Endpoint `POST /api/coupons/validate` — valida vigencia, max_uses, min_order, retorna descuento aplicable
+- [x] Endpoint `GET /api/coverage` — lista comunas activas con tarifas
+- [x] Página `/checkout` con secciones acordeón:
   - Contacto (email, nombre, teléfono)
   - Despacho (radio retiro/despacho + form de comuna y dirección)
   - Fecha y franja
   - Cupón (reutiliza componente)
   - Resumen
   - Método de pago (selector de pasarela — sin integración todavía, solo UI)
-- [ ] Validación con Zod en cliente y servidor
-- [ ] Endpoint `POST /api/cart/validate` — valida un carrito completo antes de cobrar
-- [ ] Cálculo de totales: subtotal + descuento + envío (si aplica) + total
-- [ ] Banner de cross-selling: "Te falta solo X cajas más para envío gratis"
+- [x] Validación con Zod en cliente y servidor
+- [x] Endpoint `POST /api/cart/validate` — valida un carrito completo antes de cobrar
+- [x] Cálculo de totales: subtotal + descuento + envío (si aplica) + total
+- [x] Banner de cross-selling: "Te falta solo X cajas más para envío gratis"
 
 **Definition of done:** se puede llegar hasta el botón final de "Pagar con [pasarela]" sin que se rompa nada. La Order todavía no se crea — eso viene en el siguiente sprint.
 

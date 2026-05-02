@@ -5,7 +5,7 @@ node_modules/
 .yarn/install-state.gz
 
 # Testing
-coverage/
+/coverage/
 .nyc_output/
 
 # Next.js

@@ -55,6 +55,27 @@ export function addItem(item: CartItem): Cart {
   return cart
 }
 
+export function updateQuantity(lineId: string, quantity: number): Cart {
+  const cart = readCart()
+  const next: Cart = {
+    items: cart.items
+      .map((it) =>
+        it.lineId === lineId ? { ...it, quantity: Math.max(1, quantity) } : it,
+      ),
+  }
+  writeCart(next)
+  return next
+}
+
+export function removeItem(lineId: string): Cart {
+  const cart = readCart()
+  const next: Cart = {
+    items: cart.items.filter((it) => it.lineId !== lineId),
+  }
+  writeCart(next)
+  return next
+}
+
 export function totalSlotsSelected(flavors: Record<string, number>): number {
   return Object.values(flavors).reduce((sum, n) => sum + n, 0)
 }

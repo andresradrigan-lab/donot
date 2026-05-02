@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 8 — Catálogo administrable`
-> **Estado:** No iniciado (Sprint 0–4, 6, 7 completados el 2026-05-02; Sprint 5 diferido)
+> **Sprint activo:** `Sprint 9 — Cupones, cobertura, configuración`
+> **Estado:** No iniciado (Sprint 0–4, 6, 7, 8 completados el 2026-05-02; Sprint 5 diferido)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -195,11 +195,11 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** Fernanda puede crear Droops, sabores y cajas sin ayuda técnica.
 
-- [ ] Página `/admin/droops` — lista + crear/editar Droop
-- [ ] Página `/admin/sabores` — CRUD de sabores con uploader de imagen, asignación a Droop, stock manual o reposición diaria
-- [ ] Página `/admin/cajas` — CRUD de cajas con uploader de imagen y calendario de disponibilidad
-- [ ] Uploader de imágenes a Cloudinary (o local con fallback a `public/uploads/`)
-- [ ] Vista `/admin/calendario` mensual con qué cajas/sabores están disponibles cada día
+- [x] Página `/admin/droops` — lista + crear/editar Droop
+- [x] Página `/admin/sabores` — CRUD de sabores con uploader de imagen, asignación a Droop, stock manual o reposición diaria
+- [x] Página `/admin/cajas` — CRUD de cajas con uploader de imagen y calendario de disponibilidad
+- [x] Uploader de imágenes (local a `public/uploads/`; Cloudinary queda como swap futuro reemplazando `app/api/admin/upload/route.ts`)
+- [x] Vista `/admin/calendario` mensual con qué cajas/sabores están disponibles cada día + contador de pedidos
 
 **Definition of done:** Fernanda crea Droop 002 con 3 sabores nuevos y los publica sin tocar código.
 

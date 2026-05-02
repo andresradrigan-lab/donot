@@ -15,6 +15,10 @@ const NAV = [
   { href: '/admin', label: 'Dashboard', exact: true },
   { href: '/admin/pedidos', label: 'Pedidos' },
   { href: '/admin/cocina', label: 'Cocina' },
+  { href: '/admin/calendario', label: 'Calendario' },
+  { href: '/admin/droops', label: 'Droops' },
+  { href: '/admin/sabores', label: 'Sabores' },
+  { href: '/admin/cajas', label: 'Cajas' },
 ]
 
 export function AdminHeader({ user }: Props) {
@@ -43,7 +47,7 @@ export function AdminHeader({ user }: Props) {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-6 text-sm font-semibold">
+        <nav className="flex items-center gap-4 lg:gap-6 text-sm font-semibold overflow-x-auto -mx-2 px-2">
           {NAV.map((item) => {
             const active = item.exact
               ? pathname === item.href
@@ -53,7 +57,7 @@ export function AdminHeader({ user }: Props) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'transition',
+                  'transition whitespace-nowrap',
                   active
                     ? 'text-donot-rosado'
                     : 'text-donot-crema/85 hover:text-donot-rosado',

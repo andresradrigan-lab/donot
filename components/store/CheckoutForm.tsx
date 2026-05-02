@@ -63,6 +63,7 @@ export function CheckoutForm({ initialCouponCode }: Props) {
   const [totals, setTotals] = useState<Totals | null>(null)
   const [issues, setIssues] = useState<ValidateResponse['issues']>([])
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   // Cargar carrito y cobertura.
   useEffect(() => {
@@ -138,17 +139,41 @@ export function CheckoutForm({ initialCouponCode }: Props) {
     return true
   }, [cart, contact, delivery, commune, address, date, timeSlot, totals, issues])
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!canSubmit) return
+    if (!canSubmit || !cart) return
     setSubmitting(true)
-    // Sprint 4: aquí se llama POST /api/checkout que crea la Order y redirige a la pasarela.
-    setTimeout(() => {
+    setSubmitError(null)
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cart,
+          customer: contact,
+          delivery: {
+            method: delivery,
+            address: delivery === 'DELIVERY' ? address : undefined,
+            commune: delivery === 'DELIVERY' ? commune : undefined,
+            notes: notes || undefined,
+            date,
+            timeSlot,
+          },
+          couponCode: coupon?.code,
+          paymentProvider: payment,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) {
+        setSubmitError(data.reason ?? 'No pudimos iniciar el pago.')
+        setSubmitting(false)
+        return
+      }
+      window.location.href = data.redirectUrl
+    } catch {
+      setSubmitError('No pudimos conectar con la pasarela. Reintenta en un toque.')
       setSubmitting(false)
-      alert(
-        'Listo para conectar pasarelas. El backend de pago se enchufa en el siguiente sprint.',
-      )
-    }, 400)
+    }
   }
 
   if (!cart) {
@@ -422,12 +447,16 @@ export function CheckoutForm({ initialCouponCode }: Props) {
           className="w-full"
           disabled={!canSubmit || submitting}
         >
-          {submitting ? 'Procesando…' : `Pagar con ${PAYMENT_OPTIONS.find((p) => p.id === payment)?.label}`}
+          {submitting ? 'Estamos preparando tu pago…' : `Pagar con ${PAYMENT_OPTIONS.find((p) => p.id === payment)?.label}`}
         </Button>
 
+        {submitError && (
+          <p className="text-sm text-donot-naranjo">{submitError}</p>
+        )}
+
         <p className="text-xs text-donot-muted">
-          La integración con la pasarela se conecta en el siguiente sprint.
-          Tu pedido todavía no se crea.
+          Te redirigimos a la pasarela elegida. No guardamos datos de tu
+          tarjeta.
         </p>
       </aside>
     </form>

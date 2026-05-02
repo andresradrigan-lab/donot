@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 4 — Mercado Pago end-to-end`
-> **Estado:** No iniciado (Sprint 0, 1, 2 y 3 completados el 2026-05-02)
+> **Sprint activo:** `Sprint 5 — Webpay + Khipu`
+> **Estado:** No iniciado (Sprint 0–4 completados el 2026-05-02)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -110,22 +110,23 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 > **Lee `docs/PAYMENT_INTEGRATIONS.md` § Mercado Pago antes de empezar.**
 
-- [ ] Crear adapters en `lib/payments/`: `types.ts` con interface `PaymentProvider`, `mercadopago.ts` implementación, `index.ts` factory
-- [ ] Endpoint `POST /api/checkout`:
+- [x] Crear adapters en `lib/payments/`: `types.ts` con interface `PaymentProvider`, `mercadopago.ts` implementación, `index.ts` factory
+- [x] Endpoint `POST /api/checkout`:
   - Valida carrito completo con Zod
   - Crea `Order(status=PENDING)` y `OrderItem`s en transacción
   - Llama al adapter MP para crear preference
   - Retorna `init_point` al frontend
-- [ ] Frontend en `/checkout` redirige a `init_point` después de confirmar
-- [ ] Endpoint `POST /api/webhook/mercadopago`:
+- [x] Frontend en `/checkout` redirige a `init_point` después de confirmar
+- [x] Endpoint `POST /api/webhook/mercadopago`:
   - Valida firma HMAC con `MP_WEBHOOK_SECRET`
   - Insert en `WebhookLog` (idempotencia)
   - Si `payment.status === "approved"`: `Order.status = PAID`, decrementa stock, dispara email
-- [ ] Cliente Resend configurado en `lib/email/`
-- [ ] Plantilla HTML "confirmación de pago" con mascota en header y tono de marca
-- [ ] Página `/checkout/exito` con número de pedido, link a tracking público y mascota
-- [ ] Página `/checkout/error` con CTA "Reintenta en un toque"
-- [ ] Página `/pedido/[token]` que muestra estado actual del pedido (público, sin auth)
+- [x] Cliente Resend configurado en `lib/email/` (con stub a consola si falta API key)
+- [x] Plantilla HTML "confirmación de pago" con mascota en header y tono de marca
+- [x] Página `/checkout/exito` con número de pedido, link a tracking público y mascota
+- [x] Página `/checkout/error` con CTA "Reintenta en un toque"
+- [x] Página `/pedido/[token]` que muestra estado actual del pedido (público, sin auth)
+- [x] Bonus: `POST /api/orders/[token]/refresh` que consulta MP directamente — fallback para localhost donde el webhook no puede llegar
 
 **Definition of done:** se completa una compra real de punta a punta en sandbox de MP. Email de confirmación llega. Tracking público muestra el pedido como PAID.
 

@@ -1,0 +1,292 @@
+// =============================================================
+// donot-platform — Prisma schema
+// Documentación completa: docs/SPEC.md sección 5
+// =============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== ENUMS =====
+
+enum BoxCategory {
+  PREMIUM
+  AZUCARADA
+  MIX
+  COLAB
+}
+
+enum FlavorCategory {
+  PREMIUM
+  AZUCARADA
+}
+
+enum DeliveryMethod {
+  PICKUP_CONCON
+  PICKUP_RENACA
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PREPARING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  MERCADO_PAGO
+  TRANSBANK
+  KHIPU
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum AdminRole {
+  OWNER
+  OPERATOR
+  VIEWER
+}
+
+enum WebhookProvider {
+  MERCADO_PAGO
+  TRANSBANK
+  KHIPU
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+  DUPLICATE
+}
+
+// ===== MODELOS =====
+
+/// Colección limitada de sabores (Droop 001, Droop 002...)
+model Droop {
+  id            String   @id @default(uuid())
+  code          String   @unique // "droop_001"
+  name          String              // "Droop 001"
+  tagline       String?             // "La primera carga"
+  description   String?  @db.Text
+  coverImage    String?
+  startsAt      DateTime
+  endsAt        DateTime?
+  isPublished   Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  flavors       Flavor[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  @@index([isPublished, startsAt, endsAt])
+}
+
+/// Caja (producto principal). El usuario configura sabores dentro.
+model Box {
+  id                   String      @id @default(uuid())
+  slug                 String      @unique // "caja-6-premium"
+  name                 String
+  category             BoxCategory
+  slotCount            Int         // 4 o 6
+  priceClp             Int         // en pesos
+  images               Json        // string[] de URLs
+  isActive             Boolean     @default(true)
+  availableWeekdays    Int[]       @default([0, 1, 2, 3, 4, 5, 6]) // 0=domingo
+  availableFrom        DateTime?
+  availableTo          DateTime?
+  sortOrder            Int         @default(0)
+  orderItems           OrderItem[]
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  deletedAt            DateTime?
+
+  @@index([isActive, sortOrder])
+}
+
+/// Sabor individual (sub-producto). Pertenece a un Droop opcional.
+model Flavor {
+  id                String          @id @default(uuid())
+  slug              String          @unique // "tiramisu"
+  name              String                  // "Tiramisú"
+  category          FlavorCategory
+  description       String          @db.Text
+  imageUrl          String
+  droopId           String?
+  droop             Droop?          @relation(fields: [droopId], references: [id])
+  stock             Int             @default(0)
+  stockResetDaily   Boolean         @default(false)
+  dailyCapacity     Int?
+  isActive          Boolean         @default(true)
+  availableWeekdays Int[]           @default([0, 1, 2, 3, 4, 5, 6])
+  sortOrder         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+
+  @@index([isActive, droopId])
+  @@index([category])
+}
+
+/// Pedido del cliente.
+model Order {
+  id                  String          @id @default(uuid())
+  orderNumber         String          @unique // "DN-2026-0042"
+  customerEmail       String
+  customerName        String
+  customerPhone       String
+
+  deliveryMethod      DeliveryMethod
+  deliveryAddress     String?
+  deliveryCommune     String?
+  deliveryNotes       String?         @db.Text
+  deliveryDate        DateTime?
+  deliveryTimeSlot    String?         // "10-13", "13-17", "17-20"
+
+  subtotalClp         Int
+  discountClp         Int             @default(0)
+  shippingClp         Int             @default(0)
+  totalClp            Int
+  couponCode          String?
+  coupon              Coupon?         @relation(fields: [couponCode], references: [code])
+
+  status              OrderStatus     @default(PENDING)
+  paymentProvider     PaymentProvider
+  paymentId           String?
+  paymentStatus       PaymentStatus   @default(PENDING)
+
+  publicToken         String          @unique // token para tracking público
+
+  paidAt              DateTime?
+  preparingAt         DateTime?
+  inTransitAt         DateTime?
+  deliveredAt         DateTime?
+  cancelledAt         DateTime?
+
+  items               OrderItem[]
+  webhookLogs         WebhookLog[]
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([status, createdAt])
+  @@index([paymentId])
+  @@index([deliveryDate])
+}
+
+/// Línea de pedido — una caja con sus sabores.
+model OrderItem {
+  id                String   @id @default(uuid())
+  orderId           String
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  boxId             String
+  box               Box      @relation(fields: [boxId], references: [id])
+  boxNameSnapshot   String
+  boxPriceSnapshot  Int
+  flavors           Json     // [{ flavorId, flavorName, qty }]
+  quantity          Int      @default(1)
+  lineTotalClp      Int
+
+  createdAt         DateTime @default(now())
+
+  @@index([orderId])
+}
+
+/// Cupón de descuento.
+model Coupon {
+  id                  String     @id @default(uuid())
+  code                String     @unique
+  type                CouponType
+  value               Int        // % o monto fijo según type
+  minOrderClp         Int?
+  maxUses             Int?
+  usesCount           Int        @default(0)
+  maxUsesPerUser      Int?
+  validFrom           DateTime
+  validTo             DateTime?
+  isActive            Boolean    @default(true)
+  orders              Order[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@index([code, isActive])
+}
+
+/// Zona de despacho (comuna con tarifa).
+model CoverageZone {
+  id                          String   @id @default(uuid())
+  commune                     String
+  region                      String
+  shippingClp                 Int
+  freeShippingThresholdClp    Int?
+  freeShippingMinBoxes        Int?
+  isActive                    Boolean  @default(true)
+  sortOrder                   Int      @default(0)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  @@unique([commune, region])
+  @@index([isActive])
+}
+
+/// Usuario administrativo.
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(OPERATOR)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
+/// Auditoría de webhooks de pasarelas (idempotencia + debugging).
+model WebhookLog {
+  id            String          @id @default(uuid())
+  provider      WebhookProvider
+  eventType     String
+  externalId    String?         // payment_id u otro
+  payload       Json
+  headers       Json
+  status        WebhookStatus   @default(RECEIVED)
+  errorMessage  String?         @db.Text
+  orderId       String?
+  order         Order?          @relation(fields: [orderId], references: [id])
+  receivedAt    DateTime        @default(now())
+  processedAt   DateTime?
+
+  @@unique([provider, externalId])
+  @@index([provider, status])
+}
+
+/// Configuración global del sitio (key-value).
+model SiteSetting {
+  key         String   @id // "free_shipping_threshold_clp", "pickup_address_concon", etc.
+  value       String   @db.Text
+  description String?
+  updatedAt   DateTime @updatedAt
+}

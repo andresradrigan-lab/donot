@@ -1,0 +1,26 @@
+# Postgres local para desarrollo de donot-platform.
+# Levantar con: docker compose up -d
+# Detener con:  docker compose down
+# Ver logs:     docker compose logs -f db
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: donot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: donot
+      POSTGRES_PASSWORD: donot_dev
+      POSTGRES_DB: donot_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - donot-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U donot -d donot_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  donot-pg-data:

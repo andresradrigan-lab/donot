@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+coverage/
+.nyc_output/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Production
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Env (NUNCA commitear)
+.env
+.env*.local
+!.env.example
+
+# Editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Prisma
+prisma/migrations/dev.db*
+
+# Asset uploads (servidos por Cloudinary o S3 en prod)
+public/uploads/
+
+# Backups
+*.dump
+*.sql.gz
+backups/
+
+# IMPORTANTE: donot-material/ NO se commitea (assets del cliente, propiedad privada)
+donot-material/*
+!donot-material/README.md
+!donot-material/.gitkeep

@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 7 — Pantalla Cocina + estados automáticos`
-> **Estado:** No iniciado (Sprint 0–4, 6 completados el 2026-05-02; Sprint 5 diferido)
+> **Sprint activo:** `Sprint 8 — Catálogo administrable`
+> **Estado:** No iniciado (Sprint 0–4, 6, 7 completados el 2026-05-02; Sprint 5 diferido)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -176,16 +176,16 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** Luigi tiene una vista mobile-first donde gestiona pedidos del día con 3 botones grandes. Cada cambio de estado dispara email automático.
 
-- [ ] Página `/admin/cocina` mobile-first:
+- [x] Página `/admin/cocina` mobile-first:
   - Cards grandes apiladas verticalmente
   - Cada card: número de pedido, sabores con cantidades, franja, modalidad
   - 3 botones grandes: "Empezar a preparar", "Listo para despacho", "Entregado"
   - Filtros: hoy / mañana / esta semana, por modalidad
-- [ ] Plantillas HTML de email para cada transición:
+- [x] Plantillas HTML de email para cada transición (creadas en Sprint 6):
   - PAID → PREPARING ("Tus donitas se están preparando")
   - PREPARING → IN_TRANSIT ("Tus donitas van en camino")
   - IN_TRANSIT → DELIVERED ("Llegaron tus donitas — cuéntanos qué tal")
-- [ ] Cada plantilla con mascota en header y tono de marca
+- [x] Cada plantilla con mascota en header y tono de marca
 
 **Definition of done:** Luigi puede operar el día completo desde un teléfono sin entrar al admin general.
 

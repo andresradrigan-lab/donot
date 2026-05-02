@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 1 — Tipografías, Tailwind y layout base`
-> **Estado:** No iniciado (Sprint 0 completado el 2026-05-02)
+> **Sprint activo:** `Sprint 2 — Catálogo público y configurador`
+> **Estado:** No iniciado (Sprint 0 y 1 completados el 2026-05-02)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -43,14 +43,14 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** Sistema visual implementado. Tipografías cargadas. Layout con header y footer aplicando paleta y mascota. Página home placeholder con la marca visible.
 
-- [ ] Instalar fuentes vía `next/font/google` en `app/layout.tsx`: Sniglet (peso 800) + Inter
-- [ ] Verificar que `tailwind.config.ts` ya tiene la paleta `donot.*` (viene en el scaffold)
-- [ ] Crear `<Header>` con logo verde sobre crema + nav simple + botón carrito (sin lógica todavía)
-- [ ] Crear `<Footer>` con fondo verde, logo crema, mascota Azul/Naranjo en esquina
-- [ ] Página `/` con hero centrado: logo grande, tagline corta, CTA "Ver el drop"
-- [ ] Página `/sobre-nosotros` (placeholder con copy genérico — Fernanda enviará después)
-- [ ] Página `/contacto` con formulario simple (nombre, email, mensaje) — sin backend aún
-- [ ] Componente `<MascotaEmpty>` para empty states (lo usaremos en sprints siguientes)
+- [x] Instalar fuentes vía `next/font/google` en `app/layout.tsx`: Sniglet (peso 800) + Inter
+- [x] Verificar que `tailwind.config.ts` ya tiene la paleta `donot.*` (viene en el scaffold)
+- [x] Crear `<Header>` con logo verde sobre crema + nav simple + botón carrito (sin lógica todavía)
+- [x] Crear `<Footer>` con fondo verde, logo crema, mascota Azul/Naranjo en esquina
+- [x] Página `/` con hero centrado: logo grande, tagline corta, CTA "Ver el drop"
+- [x] Página `/sobre-nosotros` (placeholder con copy genérico — Fernanda enviará después)
+- [x] Página `/contacto` con formulario simple (nombre, email, mensaje) — sin backend aún
+- [x] Componente `<MascotaEmpty>` para empty states (lo usaremos en sprints siguientes)
 
 **Definition of done:** la home se ve "como donot." al cargarse en mobile y desktop. Cualquier persona del equipo de Fernanda reconoce la marca.
 

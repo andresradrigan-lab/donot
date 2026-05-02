@@ -1,23 +1,46 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
+import { BoxCard } from '@/components/store/BoxCard'
 
-const HERO_FLAVORS = [
-  { slug: 'tiramisu', name: 'Tiramisú' },
-  { slug: 'cookies-and-cream', name: 'Cookies & Cream' },
-  { slug: 'pie-de-manzana', name: 'Pie de Manzana' },
-  { slug: 'crocanti', name: 'Crocanti' },
-]
+export default async function HomePage() {
+  const now = new Date()
 
-export default function HomePage() {
+  const droop = await prisma.droop.findFirst({
+    where: {
+      isPublished: true,
+      deletedAt: null,
+      startsAt: { lte: now },
+      OR: [{ endsAt: null }, { endsAt: { gte: now } }],
+    },
+    orderBy: { sortOrder: 'asc' },
+    include: {
+      flavors: {
+        where: { isActive: true, deletedAt: null },
+        orderBy: { sortOrder: 'asc' },
+        take: 4,
+      },
+    },
+  })
+
+  const boxes = await prisma.box.findMany({
+    where: { deletedAt: null },
+    orderBy: { sortOrder: 'asc' },
+  })
+
+  const coverFlavorSlugs = droop?.flavors.map((f) => f.slug) ?? []
+
   return (
     <>
       <section className="relative px-6 md:px-10 pt-12 md:pt-20 pb-16 md:pb-24">
         <div className="max-w-8xl mx-auto grid gap-12 md:grid-cols-2 items-center">
           <div className="flex flex-col items-start gap-6">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-donot-rosado/15 text-donot-verde font-sans font-semibold text-sm">
-              Droop 001 · La primera carga
-            </span>
+            {droop && (
+              <span className="inline-block px-4 py-1.5 rounded-full bg-donot-rosado/15 text-donot-verde font-sans font-semibold text-sm">
+                {droop.name} · {droop.tagline}
+              </span>
+            )}
             <h1 className="font-display text-5xl md:text-7xl text-donot-verde leading-[0.95]">
               Donas que no
               <br />
@@ -28,9 +51,11 @@ export default function HomePage() {
               tu cajita a domicilio.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
-              <Link href="/droop/droop_001">
-                <Button size="lg">Ver el drop</Button>
-              </Link>
+              {droop && (
+                <Link href={`/droop/${droop.code}`}>
+                  <Button size="lg">Ver el drop</Button>
+                </Link>
+              )}
               <Link href="/sobre-nosotros">
                 <Button variant="secondary" size="lg">
                   Conócenos
@@ -55,52 +80,24 @@ export default function HomePage() {
 
       <section className="px-6 md:px-10 pb-24">
         <div className="max-w-8xl mx-auto">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="font-display text-3xl md:text-4xl text-donot-verde">
-                Lo que está saliendo del horno
-              </h2>
-              <p className="text-donot-muted mt-2">
-                Una probada del Droop 001. Hay 8 en total.
-              </p>
-            </div>
-            <Link
-              href="/droop/droop_001"
-              className="hidden md:inline-flex text-donot-naranjo font-sans font-semibold hover:underline"
-            >
-              Ver todos →
-            </Link>
+          <div className="mb-10">
+            <h2 className="font-display text-3xl md:text-4xl text-donot-verde">
+              Elige tu cajita.
+            </h2>
+            <p className="text-donot-muted mt-2 max-w-xl">
+              Cuatro tamaños, premium o azucaradas. Las azucaradas vuelven con
+              el próximo drop.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {HERO_FLAVORS.map((f) => (
-              <div
-                key={f.slug}
-                className="bg-white rounded-3xl border border-donot-border shadow-soft overflow-hidden"
-              >
-                <div className="relative aspect-square bg-donot-rowAlt">
-                  <Image
-                    src={`/menu/${f.slug}.png`}
-                    alt={f.name}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <p className="font-display text-donot-verde">{f.name}</p>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+            {boxes.map((box) => (
+              <BoxCard
+                key={box.id}
+                box={box}
+                coverFlavorSlugs={coverFlavorSlugs}
+              />
             ))}
-          </div>
-
-          <div className="md:hidden mt-6 text-center">
-            <Link
-              href="/droop/droop_001"
-              className="text-donot-naranjo font-sans font-semibold hover:underline"
-            >
-              Ver todos →
-            </Link>
           </div>
         </div>
       </section>

@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 2 — Catálogo público y configurador`
-> **Estado:** No iniciado (Sprint 0 y 1 completados el 2026-05-02)
+> **Sprint activo:** `Sprint 3 — Carrito y checkout (sin pagos aún)`
+> **Estado:** No iniciado (Sprint 0, 1 y 2 completados el 2026-05-02)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -62,19 +62,19 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 > **Lee `docs/MOCKUP_REFERENCE.md` antes de empezar.** Y abre el mockup en `https://app.optify.cl/presentaciones/prueba.html`.
 
-- [ ] Endpoint `GET /api/droops/active` que retorna el Droop vigente con sus sabores
-- [ ] Endpoint `GET /api/boxes` con catálogo de cajas activas
-- [ ] Endpoint `GET /api/boxes/[slug]` con detalle + sabores compatibles
-- [ ] Página `/droop/[slug]` con cover del drop, tagline, grid de sabores con sus fotos y descripciones oficiales
-- [ ] Componente `<BoxCard>` (paso 1 del configurador)
-- [ ] Página home `/`: hero + las 4 cards de cajas (las 2 azucaradas con overlay "Próximamente")
-- [ ] Página `/caja/[slug]`: configurador de 2 pasos
+- [x] Endpoint `GET /api/droops/active` que retorna el Droop vigente con sus sabores
+- [x] Endpoint `GET /api/boxes` con catálogo de cajas activas
+- [x] Endpoint `GET /api/boxes/[slug]` con detalle + sabores compatibles
+- [x] Página `/droop/[slug]` con cover del drop, tagline, grid de sabores con sus fotos y descripciones oficiales
+- [x] Componente `<BoxCard>` (paso 1 del configurador)
+- [x] Página home `/`: hero + las 4 cards de cajas (las 2 azucaradas con overlay "Próximamente")
+- [x] Página `/caja/[slug]`: configurador de 2 pasos
   - Paso 1: confirmación de la caja seleccionada
   - Paso 2: grid de sabores compatibles con control +/-
   - Contador `X/N` sticky
   - Botón "Quiero estas donas" deshabilitado hasta `X = N`
-- [ ] Persistencia del progreso en `localStorage` (clave: `donot:cart`)
-- [ ] Mobile-first: probar en viewport 375px
+- [x] Persistencia del progreso en `localStorage` (clave: `donot:cart` + `donot:in-progress:${slug}`)
+- [x] Mobile-first: probar en viewport 375px (sticky CTA + grid 2 cols)
 
 **Definition of done:** Fernanda puede entrar al sitio, elegir una Cajita 6 Premium, configurarla con 6 sabores y "agregar al carrito" (que por ahora solo guarda en localStorage).
 

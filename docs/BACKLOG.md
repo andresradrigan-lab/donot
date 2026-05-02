@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 11 — QA, hardening y soft launch`
-> **Estado:** No iniciado (Sprint 0–4, 6–10 completados el 2026-05-02; Sprint 5 diferido)
+> **Sprint activo:** Soft launch (esperando provisioning del VPS por el usuario)
+> **Estado:** Sprint 11 código completo. Pendiente lo manual: SSH al VPS, DNS, GitHub secrets. Ver `docs/DEPLOY.md`.
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -241,15 +241,17 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** El equipo prueba todo en producción staging, ajusta copies, monitorea, y pasa a producción real.
 
-- [ ] Setup VPS Hostinger KVM 2 — Ubuntu 24.04, Node 20, PostgreSQL 16, NGINX, Certbot
-- [ ] Deploy con PM2 vía GitHub Actions
-- [ ] DNS de `donot.cl` apuntando al VPS
-- [ ] SSL via Let's Encrypt
-- [ ] UptimeRobot configurado contra `/api/health`
-- [ ] Backups diarios `pg_dump` a Backblaze B2
-- [ ] Pruebas manuales del equipo: cada uno hace 1 pedido real y verifica el flujo completo
-- [ ] Ajustes de copies y plantillas de email según feedback
-- [ ] Onboarding a Fernanda y Luigi con tutorial breve
+- [x] Setup VPS Hostinger KVM 2 — `deploy/scripts/provision-vps.sh` automatiza Ubuntu 24.04 + Node 20 + Postgres 16 + NGINX + Certbot + PM2 + UFW
+- [x] Deploy con PM2 vía GitHub Actions — `.github/workflows/deploy.yml` empaqueta `.next/standalone`, rsync al VPS, `release.sh` migra + symlink + reload
+- [ ] **DNS de `donot.cl` apuntando al VPS** (manual del usuario)
+- [x] SSL via Let's Encrypt — comando documentado en `docs/DEPLOY.md` §5
+- [x] UptimeRobot configurado contra `/api/health` — endpoint creado, instrucción en `docs/DEPLOY.md` §9
+- [x] Backups diarios `pg_dump` — `deploy/scripts/backup-db.sh` con rotación 30d, hook opcional para B2
+- [ ] Pruebas manuales del equipo: cada uno hace 1 pedido real y verifica el flujo completo (esperando VPS arriba)
+- [ ] Ajustes de copies y plantillas de email según feedback (post-soft-launch)
+- [ ] Onboarding a Fernanda y Luigi con tutorial breve (post-soft-launch)
+- [x] Bonus: `next.config.js` con headers de seguridad + HSTS prod, `output: 'standalone'`, Next subido a 14.2.35 (vuln crítica de Sprint 0 cerrada), Transbank-SDK removido (no se usa, eliminó vulns de axios)
+- [x] Bonus: CI en cada PR (`.github/workflows/ci.yml`) con typecheck + lint + build contra Postgres efímero
 
 **Definition of done:** primera venta real en producción. Sistema corriendo 7 días sin downtime.
 

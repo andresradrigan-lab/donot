@@ -2,11 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Build standalone para deploy con PM2: copiamos solo .next/standalone +
+  // .next/static + public/ al VPS, sin node_modules completos.
+  output: 'standalone',
   images: {
     remotePatterns: [
-      // Cloudinary (cuando se configure)
       { protocol: 'https', hostname: 'res.cloudinary.com' },
-      // Mercado Pago assets
       { protocol: 'https', hostname: 'http2.mlstatic.com' },
     ],
   },
@@ -15,6 +16,27 @@ const nextConfig = {
     fetches: {
       fullUrl: false,
     },
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          ...(process.env.NODE_ENV === 'production'
+            ? [
+                {
+                  key: 'Strict-Transport-Security',
+                  value: 'max-age=63072000; includeSubDomains; preload',
+                },
+              ]
+            : []),
+        ],
+      },
+    ]
   },
 }
 

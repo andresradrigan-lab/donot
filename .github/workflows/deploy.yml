@@ -1,0 +1,118 @@
+name: Deploy a producción
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.id.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: id
+        run: echo "release_id=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build (standalone)
+        run: npm run build
+
+      - name: Empaquetar release
+        run: |
+          mkdir -p release
+          # Salida standalone + estáticos + public + manifests + scripts
+          rsync -a --delete \
+            .next/standalone/ \
+            .next/static/ \
+            public/ \
+            prisma/ \
+            ecosystem.config.js \
+            package.json \
+            package-lock.json \
+            deploy/ \
+            release/raw/ 2>/dev/null || true
+          # Estructura limpia:
+          rm -rf release/donot-platform
+          mkdir -p release/donot-platform
+          cp -r .next release/donot-platform/.next
+          cp -r public release/donot-platform/public
+          cp -r prisma release/donot-platform/prisma
+          cp -r deploy release/donot-platform/deploy
+          cp ecosystem.config.js package.json package-lock.json release/donot-platform/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: release/donot-platform
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Add VPS to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Subir release al VPS
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          REL: ${{ needs.build.outputs.release_id }}
+        run: |
+          REMOTE_DIR="/var/www/donot-platform/releases/${REL}"
+          ssh ${USER}@${HOST} "mkdir -p ${REMOTE_DIR}"
+          rsync -az --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+            release/ ${USER}@${HOST}:${REMOTE_DIR}/
+
+      - name: Activar release (migrate + symlink + pm2)
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          REL: ${{ needs.build.outputs.release_id }}
+        run: |
+          REMOTE_DIR="/var/www/donot-platform/releases/${REL}"
+          ssh ${USER}@${HOST} "bash ${REMOTE_DIR}/deploy/scripts/release.sh ${REMOTE_DIR}"
+
+      - name: Health check post-deploy
+        run: |
+          sleep 5
+          for i in 1 2 3 4 5; do
+            if curl -fsS https://donot.cl/api/health > /dev/null; then
+              echo "✅  Health OK"
+              exit 0
+            fi
+            echo "Esperando health check…"
+            sleep 5
+          done
+          echo "❌  Health check falló tras deploy"
+          exit 1

@@ -1,7 +1,7 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** `Sprint 6 — Auth admin + módulo Pedidos`
-> **Estado:** No iniciado (Sprint 0–4 completados el 2026-05-02; Sprint 5 diferido)
+> **Sprint activo:** `Sprint 7 — Pantalla Cocina + estados automáticos`
+> **Estado:** No iniciado (Sprint 0–4, 6 completados el 2026-05-02; Sprint 5 diferido)
 > **Última actualización:** 2026-05-02
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
@@ -158,15 +158,15 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** Login admin funcional, CRUD básico de pedidos, vista lista y detalle.
 
-- [ ] Tabla `AdminUser` con seed inicial (1 OWNER con email `andres@morgansmedia.cl`, password configurada por env var inicial)
-- [ ] Endpoint `POST /api/admin/login` con bcrypt + JWT firmado
-- [ ] Cookie HttpOnly + Secure + SameSite=Lax
-- [ ] Middleware en `app/(admin)/admin/...` que valida sesión y rol
-- [ ] Página `/admin/login`
-- [ ] Página `/admin` (dashboard con KPIs básicos del día)
-- [ ] Página `/admin/pedidos` con listado filtrable (estado, fecha, comuna)
-- [ ] Página `/admin/pedidos/[id]` con detalle completo
-- [ ] Acción "Cambiar estado" en detalle: dispara email correspondiente
+- [x] Tabla `AdminUser` con seed inicial (1 OWNER con email `andres@morgansmedia.cl`, password configurada por env var inicial)
+- [x] Endpoint `POST /api/admin/login` con bcrypt + JWT firmado
+- [x] Cookie HttpOnly + Secure + SameSite=Lax
+- [x] Middleware en `app/(admin)/admin/...` que valida sesión y rol (vía `requireAdmin()` en layout `(authed)`)
+- [x] Página `/admin/login`
+- [x] Página `/admin` (dashboard con KPIs básicos del día)
+- [x] Página `/admin/pedidos` con listado filtrable (estado, fecha, comuna)
+- [x] Página `/admin/pedidos/[id]` con detalle completo
+- [x] Acción "Cambiar estado" en detalle: dispara email correspondiente
 
 **Definition of done:** Andrés y Fernanda pueden loguearse y ver pedidos reales (de los hechos en sprint 4-5).
 

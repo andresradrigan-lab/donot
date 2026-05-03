@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCompatibleFlavors } from '@/lib/catalog'
 import { FlavorPicker } from '@/components/store/FlavorPicker'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: { slug: string }
 }

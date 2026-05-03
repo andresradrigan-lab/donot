@@ -6,6 +6,10 @@ import { MetaPixelScript } from '@/components/store/MetaPixelScript'
 import { StructuredData } from '@/components/store/StructuredData'
 import { getPublicLayoutSettings } from '@/lib/settings'
 
+// Forzar render dinámico: el layout y la metadata se construyen leyendo
+// SiteSetting de la BD, así que no tiene sentido cachear estáticamente.
+export const dynamic = 'force-dynamic'
+
 const sniglet = Sniglet({
   subsets: ['latin'],
   weight: ['800'],

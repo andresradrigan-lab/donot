@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { BoxCard } from '@/components/store/BoxCard'
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   const now = new Date()
 

@@ -5,6 +5,8 @@ import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { DroopAnalytics } from '@/components/store/DroopAnalytics'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: { slug: string }
 }

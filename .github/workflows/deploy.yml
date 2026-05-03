@@ -10,10 +10,49 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DEPLOY_PORT: '65002' # Hostinger usa 65002, no 22
+  DEPLOY_PORT: '65002'
 
 jobs:
-  deploy:
+  # Estrategia híbrida: si DEPLOY_HOOK_URL está configurado, usamos
+  # pull-based (webhook al app); si no, fallback a push SSH.
+  notify:
+    if: ${{ vars.DEPLOY_MODE == 'webhook' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Llamar al deploy hook
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+          DEPLOY_HOOK_SECRET: ${{ secrets.DEPLOY_HOOK_SECRET }}
+        run: |
+          BODY=$(printf '{"ref":"origin/main","commit":"%s"}' "${GITHUB_SHA}")
+          SIG=$(printf '%s' "${BODY}" | openssl dgst -sha256 -hmac "${DEPLOY_HOOK_SECRET}" -hex | sed 's/^.* //')
+          response=$(curl -sS -w "\n%{http_code}" \
+            -X POST "${DEPLOY_HOOK_URL}" \
+            -H "Content-Type: application/json" \
+            -H "X-Deploy-Signature: ${SIG}" \
+            --data "${BODY}")
+          body=$(echo "$response" | sed '$d')
+          code=$(echo "$response" | tail -1)
+          echo "Response: $body"
+          echo "HTTP: $code"
+          if [ "$code" != "200" ]; then exit 1; fi
+
+      - name: Esperar 90s y verificar health
+        run: |
+          sleep 90
+          for i in 1 2 3 4 5; do
+            status=$(curl -sS --max-time 10 -o /dev/null -w "%{http_code}" https://donot.cl/api/health || echo 000)
+            if [ "$status" = "200" ]; then
+              echo "✅  Health OK"
+              exit 0
+            fi
+            sleep 30
+          done
+          exit 1
+
+  push-deploy:
+    if: ${{ vars.DEPLOY_MODE != 'webhook' }}
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -36,33 +75,16 @@ jobs:
       - name: Build (standalone)
         run: npm run build
         env:
-          # Placeholder solo para que Prisma client se construya. Las pages
-          # son force-dynamic, así que no se ejecutan queries en build.
           DATABASE_URL: mysql://build:build@localhost:9999/build
-
-      - name: Prune dev dependencies
-        run: npm prune --omit=dev
 
       - name: Empaquetar release (tar.gz)
         env:
           REL: ${{ steps.id.outputs.release_id }}
         run: |
           mkdir -p out
-          # node_modules se incluye para que `prisma migrate deploy` y `tsx
-          # prisma/seed.ts` funcionen en el servidor sin npm install ahí.
-          # lib/ y tsconfig.json son necesarios para que el seed (tsx)
-          # resuelva los imports.
           tar -czf "out/${REL}.tar.gz" \
-            .next \
-            public \
-            prisma \
-            deploy \
-            node_modules \
-            lib \
-            ecosystem.config.js \
-            package.json \
-            package-lock.json \
-            tsconfig.json
+            .next public prisma deploy node_modules lib \
+            ecosystem.config.js package.json package-lock.json tsconfig.json
           ls -lh out/
 
       - name: Setup SSH
@@ -77,19 +99,18 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -p ${{ env.DEPLOY_PORT }} -H "$HOST" >> ~/.ssh/known_hosts
 
-      - name: Subir + descomprimir release en el servidor
+      - name: Subir + descomprimir
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
           REL: ${{ steps.id.outputs.release_id }}
         run: |
-          REMOTE_REL="\$HOME/donot-platform/releases/${REL}"
-          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} "mkdir -p ${REMOTE_REL}"
+          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} "mkdir -p \$HOME/donot-platform/releases/${REL}"
           scp -P ${{ env.DEPLOY_PORT }} "out/${REL}.tar.gz" "${USER}@${HOST}:donot-platform/releases/${REL}.tar.gz"
           ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} \
             "tar -xzf \$HOME/donot-platform/releases/${REL}.tar.gz -C \$HOME/donot-platform/releases/${REL}/ && rm \$HOME/donot-platform/releases/${REL}.tar.gz"
 
-      - name: Activar release (migrate + symlink + pm2)
+      - name: Activar release
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
@@ -98,7 +119,7 @@ jobs:
           ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} \
             "bash \$HOME/donot-platform/releases/${REL}/deploy/scripts/release.sh \$HOME/donot-platform/releases/${REL}"
 
-      - name: Health check post-deploy
+      - name: Health check
         run: |
           sleep 8
           for i in 1 2 3 4 5 6; do
@@ -106,8 +127,6 @@ jobs:
               echo "✅  Health OK"
               exit 0
             fi
-            echo "Esperando health check ($i/6)…"
             sleep 8
           done
-          echo "❌  Health check falló tras deploy"
           exit 1

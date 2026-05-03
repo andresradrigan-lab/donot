@@ -168,7 +168,7 @@ function shellHtml({
               </p>
               <p style="margin:0 0 12px;">Donas que no deberían existir · Concón–Reñaca</p>
               <p style="margin:0;">
-                <a href="https://instagram.com/donot.cl" style="color:${accentColor};text-decoration:none;font-weight:600;">@donot.cl</a>
+                <a href="https://www.instagram.com/donot_cl/" style="color:${accentColor};text-decoration:none;font-weight:600;">@donot_cl</a>
                 <span style="color:${PALETTE.border};margin:0 8px;">·</span>
                 <a href="mailto:hola@donot.cl" style="color:${accentColor};text-decoration:none;font-weight:600;">hola@donot.cl</a>
               </p>
@@ -432,7 +432,7 @@ export function orderDeliveredHtml({
       </p>
       <p style="margin:0 0 8px;text-align:center;color:${PALETTE.muted};">
         Si te animas, etiquétanos en una historia o cuéntanos qué tal en
-        <a href="https://instagram.com/donot.cl" style="color:${PALETTE.naranjo};font-weight:700;text-decoration:none;">@donot.cl</a>.
+        <a href="https://www.instagram.com/donot_cl/" style="color:${PALETTE.naranjo};font-weight:700;text-decoration:none;">@donot_cl</a>.
       </p>
       <p style="margin:24px 0 0;text-align:center;">
         <span style="display:inline-block;background:${PALETTE.rosadoSoft};color:${PALETTE.verde};padding:10px 18px;border-radius:9999px;font-family:${FONT_ACCENT};font-style:italic;font-size:15px;">

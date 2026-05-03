@@ -36,8 +36,8 @@ interface InstagramPost {
 }
 
 export async function InstagramFeed() {
-  const handleRaw = await getStringSetting('contact_instagram', '@donot.cl')
-  const handle = (handleRaw ?? '@donot.cl').replace(/^@/, '')
+  const handleRaw = await getStringSetting('contact_instagram', '@donot_cl')
+  const handle = (handleRaw ?? '@donot_cl').replace(/^@/, '')
   const profileUrl = `https://instagram.com/${handle}`
 
   // Si más adelante se popula la tabla InstagramPost con la Graph API,

@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import { Mail, Instagram, MapPin, Send } from 'lucide-react'
+import { TikTokIcon } from '@/components/store/SocialIcons'
 
 export const metadata = {
   title: 'Contacto · donot.',
@@ -54,7 +55,7 @@ export default function ContactPage() {
                 <span className="font-semibold">hola@donot.cl</span>
               </a>
               <a
-                href="https://instagram.com/donot.cl"
+                href="https://www.instagram.com/donot_cl/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-3 hover:text-donot-rosado transition w-fit"
@@ -62,7 +63,18 @@ export default function ContactPage() {
                 <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-donot-crema/15 group-hover:bg-donot-rosado/30 transition">
                   <Instagram size={18} />
                 </span>
-                <span className="font-semibold">@donot.cl</span>
+                <span className="font-semibold">@donot_cl</span>
+              </a>
+              <a
+                href="https://www.tiktok.com/@donot_cl"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-3 hover:text-donot-rosado transition w-fit"
+              >
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-donot-crema/15 group-hover:bg-donot-rosado/30 transition">
+                  <TikTokIcon size={18} />
+                </span>
+                <span className="font-semibold">@donot_cl</span>
               </a>
               <span className="inline-flex items-center gap-3 text-donot-crema/85">
                 <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-donot-crema/15">

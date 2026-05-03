@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Instagram, Mail, MapPin } from 'lucide-react'
+import { TikTokIcon } from '@/components/store/SocialIcons'
 
 const NAV = [
   { href: '/droop/droop_001', label: 'Drop activo' },
@@ -29,9 +30,9 @@ export function Footer() {
           <Image
             src="/brand/do-not-crema-horizontal.png"
             alt="donot."
-            width={220}
-            height={64}
-            className="h-12 md:h-14 w-auto"
+            width={140}
+            height={140}
+            className="h-20 md:h-24 w-auto"
           />
           <p className="text-donot-crema/85 leading-relaxed">
             Donas que no deberían existir.<br />
@@ -73,12 +74,20 @@ export function Footer() {
             Encuéntranos
           </h4>
           <a
-            href="https://instagram.com/donot.cl"
+            href="https://www.instagram.com/donot_cl/"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2.5 text-donot-crema/85 hover:text-donot-rosado transition w-fit"
           >
-            <Instagram size={18} /> @donot.cl
+            <Instagram size={18} /> @donot_cl
+          </a>
+          <a
+            href="https://www.tiktok.com/@donot_cl"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 text-donot-crema/85 hover:text-donot-rosado transition w-fit"
+          >
+            <TikTokIcon size={18} /> @donot_cl
           </a>
           <a
             href="mailto:hola@donot.cl"

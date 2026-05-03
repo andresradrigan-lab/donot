@@ -168,10 +168,11 @@ export default async function HomePage() {
                   o llegan otros recién diseñados. <em className="text-donot-rosado">No te quedes con las ganas.</em>
                 </p>
                 {droop && (
-                  <Link href={`/droop/${droop.code}`} className="inline-block mt-6">
-                    <Button size="lg" variant="secondary">
-                      Ver {droop.name} →
-                    </Button>
+                  <Link
+                    href={`/droop/${droop.code}`}
+                    className="inline-flex items-center gap-2 mt-6 px-7 py-3.5 rounded-full bg-donot-rosado text-donot-crema font-bold text-base hover:bg-donot-rosado/90 transition shadow-pop"
+                  >
+                    Ver {droop.name} →
                   </Link>
                 )}
               </div>

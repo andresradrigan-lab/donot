@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { Check, Clock, Package, Truck, X, Home, MapPin } from 'lucide-react'
+import { Clock, Home, MapPin } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { formatClp } from '@/lib/format'
-import { cn } from '@/lib/utils'
+import { OrderTimeline } from '@/components/store/OrderTimeline'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,13 +17,6 @@ interface FlavorLine {
   qty: number
 }
 
-const STATUS_FLOW = [
-  { key: 'PAID', label: 'Pagado', icon: Check },
-  { key: 'PREPARING', label: 'Preparando', icon: Clock },
-  { key: 'IN_TRANSIT', label: 'En camino', icon: Truck },
-  { key: 'DELIVERED', label: 'Entregado', icon: Package },
-] as const
-
 export default async function OrderTrackingPage({ params }: Props) {
   const order = await prisma.order.findUnique({
     where: { publicToken: params.token },
@@ -32,11 +25,6 @@ export default async function OrderTrackingPage({ params }: Props) {
 
   if (!order) notFound()
 
-  const isCancelled = order.status === 'CANCELLED'
-  const isRefunded = order.status === 'REFUNDED'
-  const isPending = order.status === 'PENDING'
-
-  const currentIdx = STATUS_FLOW.findIndex((s) => s.key === order.status)
   const formattedDate = order.deliveryDate
     ? new Intl.DateTimeFormat('es-CL', {
         day: '2-digit',
@@ -69,60 +57,17 @@ export default async function OrderTrackingPage({ params }: Props) {
           />
         </header>
 
-        {isPending && (
-          <div className="mb-8 px-5 py-4 bg-donot-azulPastel/30 rounded-2xl text-donot-verde">
-            <p className="font-semibold">Esperando confirmación de pago.</p>
-            <p className="text-sm text-donot-muted">
-              Si pagaste hace un momento, dale unos segundos y refresca.
-            </p>
-          </div>
-        )}
-
-        {(isCancelled || isRefunded) && (
-          <div className="mb-8 px-5 py-4 bg-donot-naranjo/10 rounded-2xl text-donot-naranjo flex items-start gap-3">
-            <X size={20} className="mt-0.5" />
-            <div>
-              <p className="font-semibold">
-                {isCancelled ? 'Pedido cancelado' : 'Pedido reembolsado'}
-              </p>
-              <p className="text-sm text-donot-muted">
-                Si necesitas ayuda, escríbenos a hola@donot.cl.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {!isCancelled && !isRefunded && !isPending && (
-          <ol className="grid gap-3 mb-8">
-            {STATUS_FLOW.map((step, idx) => {
-              const Icon = step.icon
-              const reached = idx <= currentIdx
-              return (
-                <li
-                  key={step.key}
-                  className={cn(
-                    'flex items-center gap-4 px-4 py-3 rounded-2xl border',
-                    reached
-                      ? 'border-donot-verde bg-donot-verde/5 text-donot-verde'
-                      : 'border-donot-border text-donot-muted',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'inline-flex items-center justify-center w-9 h-9 rounded-full',
-                      reached
-                        ? 'bg-donot-verde text-donot-crema'
-                        : 'bg-donot-rowAlt',
-                    )}
-                  >
-                    <Icon size={16} />
-                  </span>
-                  <span className="font-display text-lg">{step.label}</span>
-                </li>
-              )
-            })}
-          </ol>
-        )}
+        <OrderTimeline
+          token={params.token}
+          initialStatus={order.status}
+          initialTimestamps={{
+            paidAt: order.paidAt?.toISOString() ?? null,
+            preparingAt: order.preparingAt?.toISOString() ?? null,
+            inTransitAt: order.inTransitAt?.toISOString() ?? null,
+            deliveredAt: order.deliveredAt?.toISOString() ?? null,
+            cancelledAt: order.cancelledAt?.toISOString() ?? null,
+          }}
+        />
 
         <div className="grid gap-3 mb-8 text-donot-ink">
           <div className="flex items-center gap-3">
@@ -159,9 +104,9 @@ export default async function OrderTrackingPage({ params }: Props) {
             return (
               <li
                 key={it.id}
-                className="px-4 py-3 bg-donot-rowAlt rounded-xl"
+                className="px-4 py-4 bg-donot-rowAlt rounded-2xl"
               >
-                <div className="flex items-baseline justify-between gap-3 mb-1">
+                <div className="flex items-baseline justify-between gap-3 mb-2">
                   <span className="font-semibold text-donot-verde">
                     {it.boxNameSnapshot}
                     {it.quantity > 1 && ` × ${it.quantity}`}
@@ -171,9 +116,33 @@ export default async function OrderTrackingPage({ params }: Props) {
                   </span>
                 </div>
                 {flavors.length > 0 && (
-                  <p className="text-donot-muted text-sm">
-                    {flavors.map((f) => `${f.qty} × ${f.flavorName}`).join(' · ')}
-                  </p>
+                  <>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {flavors.map((f) => (
+                        <div
+                          key={f.flavorSlug}
+                          className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-donot-crema bg-white shrink-0"
+                          title={`${f.qty} × ${f.flavorName}`}
+                        >
+                          <Image
+                            src={`/menu/${f.flavorSlug}.png`}
+                            alt={f.flavorName}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                          {f.qty > 1 && (
+                            <span className="absolute -bottom-0 -right-0 bg-donot-verde text-donot-crema text-[10px] font-bold rounded-full w-5 h-5 inline-flex items-center justify-center border-2 border-white">
+                              {f.qty}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-donot-muted text-sm">
+                      {flavors.map((f) => `${f.qty} × ${f.flavorName}`).join(' · ')}
+                    </p>
+                  </>
                 )}
               </li>
             )

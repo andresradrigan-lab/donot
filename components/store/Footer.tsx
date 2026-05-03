@@ -28,7 +28,7 @@ export function Footer() {
         {/* Brand */}
         <div className="flex flex-col gap-5 max-w-md">
           <Image
-            src="/brand/do-not-crema-horizontal.png"
+            src="/brand/do-not-rosado-horizontal.png"
             alt="donot."
             width={300}
             height={326}
@@ -40,11 +40,11 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-3 pt-2">
             <Image
-              src="/brand/mascota-azul-naranjo.png"
+              src="/brand/mascota-crema-verde.png"
               alt=""
-              width={56}
-              height={70}
-              className="h-14 w-auto"
+              width={120}
+              height={180}
+              className="h-20 w-auto"
             />
             <p className="font-display italic text-donot-rosado text-lg leading-tight">
               "Solo recuerda <br />no comerlas todas."

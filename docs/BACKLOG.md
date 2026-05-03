@@ -1,8 +1,8 @@
 # BACKLOG.md — Sprints
 
-> **Sprint activo:** Soft launch (esperando provisioning del VPS por el usuario)
-> **Estado:** Sprint 11 código completo. Pendiente lo manual: SSH al VPS, DNS, GitHub secrets. Ver `docs/DEPLOY.md`.
-> **Última actualización:** 2026-05-02
+> **Sprint activo:** Soft launch (deploy via integración nativa Hostinger ↔ GitHub)
+> **Estado:** Sprint 11 código completo. Pendiente: BD MySQL en hPanel, env vars, primer deploy. Ver `docs/HOSTINGER_DEPLOY.md`.
+> **Última actualización:** 2026-05-03
 
 Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo" arriba.** Cuando termines un sprint, marca su checkbox y actualiza el header.
 

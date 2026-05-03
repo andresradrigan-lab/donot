@@ -2,9 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Build standalone para deploy con PM2: copiamos solo .next/standalone +
-  // .next/static + public/ al VPS, sin node_modules completos.
-  output: 'standalone',
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },

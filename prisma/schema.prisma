@@ -6,6 +6,13 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
+  // CloudLinux de Hostinger usa OpenSSL 1.1 con glibc; el runner de
+  // GitHub Actions es Ubuntu 24.04 con OpenSSL 3.0. Sumamos varios
+  // targets para que el binario correcto esté disponible donde sea
+  // que se ejecute. Necesario aunque usemos el adapter mariadb,
+  // porque algunas operaciones del cliente (parser, schema reflection)
+  // usan el binary engine.
+  binaryTargets = ["native", "rhel-openssl-1.1.x", "debian-openssl-1.1.x"]
 }
 
 datasource db {

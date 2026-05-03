@@ -40,10 +40,10 @@ export function Header() {
           <Image
             src="/brand/do-not-verde-horizontal.png"
             alt="donot."
-            width={120}
-            height={120}
+            width={300}
+            height={326}
             priority
-            className="h-11 w-auto md:h-12"
+            className="h-12 w-auto md:h-14"
           />
         </Link>
 

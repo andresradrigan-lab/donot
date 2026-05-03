@@ -38,7 +38,7 @@ export default async function HomePage() {
   return (
     <>
       {/* ===== HERO ===== */}
-      <section className="relative px-6 md:px-10 pt-12 md:pt-20 pb-20 md:pb-28 overflow-hidden">
+      <section className="relative px-6 md:px-10 lg:px-16 pt-10 md:pt-16 pb-16 md:pb-24 overflow-hidden">
         {/* Decoraciones de fondo */}
         <div
           aria-hidden
@@ -49,7 +49,7 @@ export default async function HomePage() {
           className="absolute top-1/2 -right-40 w-[28rem] h-[28rem] rounded-full bg-donot-azulPastel/30 blur-3xl pointer-events-none"
         />
 
-        <div className="relative max-w-8xl mx-auto grid gap-10 md:gap-16 md:grid-cols-[1.05fr_1fr] items-center">
+        <div className="relative max-w-7xl mx-auto grid gap-10 md:gap-12 md:grid-cols-[1.1fr_1fr] items-center">
           <div className="flex flex-col items-start gap-6">
             {droop && (
               <Link
@@ -104,16 +104,16 @@ export default async function HomePage() {
 
           {/* Hero photo with layered cards */}
           <div className="relative">
-            <div className="relative aspect-[4/5] max-w-md mx-auto md:mx-0 md:ml-auto">
+            <div className="relative aspect-square max-w-sm md:max-w-md mx-auto md:ml-auto">
               <div
                 aria-hidden
-                className="absolute inset-0 rounded-[3rem] bg-donot-azulPastel/60 -rotate-3 translate-x-3 translate-y-3"
+                className="absolute inset-0 rounded-[2.5rem] bg-donot-azulPastel/60 -rotate-3 translate-x-3 translate-y-3"
               />
               <div
                 aria-hidden
-                className="absolute inset-0 rounded-[3rem] bg-donot-rosado/30 rotate-3 -translate-x-2"
+                className="absolute inset-0 rounded-[2.5rem] bg-donot-rosado/30 rotate-3 -translate-x-2"
               />
-              <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-pop">
+              <div className="relative aspect-square rounded-[2.5rem] overflow-hidden shadow-pop">
                 <Image
                   src="/email/hero-cajas.jpg"
                   alt="Cajita donot. con donas premium"

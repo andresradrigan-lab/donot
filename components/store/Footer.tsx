@@ -30,9 +30,9 @@ export function Footer() {
           <Image
             src="/brand/do-not-crema-horizontal.png"
             alt="donot."
-            width={140}
-            height={140}
-            className="h-16 md:h-20 w-auto"
+            width={300}
+            height={326}
+            className="h-20 md:h-24 w-auto"
           />
           <p className="text-donot-crema/85 leading-relaxed">
             Donas que no deberían existir.<br />

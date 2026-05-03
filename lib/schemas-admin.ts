@@ -86,6 +86,29 @@ export const adminUserUpdateSchema = z.object({
 
 export const settingsSchema = z.record(z.string().max(80), z.string().max(2000))
 
+export const galleryImageSchema = z.object({
+  imageUrl: z.string().min(1).max(500),
+  caption: z.string().max(240).optional().nullable(),
+  alt: z.string().max(240).optional().nullable(),
+  sortOrder: z.number().int().default(0),
+  isPublished: z.boolean().default(true),
+})
+
+export const blogPostSchema = z.object({
+  slug: slug,
+  title: z.string().min(1).max(160),
+  excerpt: z.string().min(1).max(400),
+  content: z.string().min(1).max(120000),
+  coverImage: z.string().max(500).optional().nullable(),
+  author: z.string().min(1).max(80).default('donot.'),
+  tags: z.array(z.string().max(40)).default([]),
+  seoTitle: z.string().max(160).optional().nullable(),
+  seoDescription: z.string().max(320).optional().nullable(),
+  ogImage: z.string().max(500).optional().nullable(),
+  isPublished: z.boolean().default(false),
+  publishedAt: z.string().optional().nullable(),
+})
+
 export type DroopInput = z.infer<typeof droopSchema>
 export type FlavorInput = z.infer<typeof flavorSchema>
 export type BoxInput = z.infer<typeof boxSchema>

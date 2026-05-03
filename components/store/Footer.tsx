@@ -4,6 +4,8 @@ import { Instagram, Mail, MapPin } from 'lucide-react'
 
 const NAV = [
   { href: '/droop/droop_001', label: 'Drop activo' },
+  { href: '/galeria', label: 'Galería' },
+  { href: '/blog', label: 'Blog' },
   { href: '/sobre-nosotros', label: 'Sobre nosotros' },
   { href: '/contacto', label: 'Contacto' },
 ]

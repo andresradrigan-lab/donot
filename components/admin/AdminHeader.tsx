@@ -28,6 +28,8 @@ const NAV: NavItem[] = [
   { href: '/admin/cajas', label: 'Cajas' },
   { href: '/admin/cupones', label: 'Cupones' },
   { href: '/admin/cobertura', label: 'Cobertura' },
+  { href: '/admin/galeria', label: 'Galería' },
+  { href: '/admin/blog', label: 'Blog' },
   { href: '/admin/usuarios', label: 'Usuarios', ownerOnly: true },
   { href: '/admin/config', label: 'Config' },
 ]

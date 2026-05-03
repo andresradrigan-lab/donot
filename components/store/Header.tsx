@@ -10,6 +10,8 @@ import { openMiniCart } from '@/components/store/MiniCart'
 const NAV = [
   { href: '/', label: 'Inicio' },
   { href: '/droop/droop_001', label: 'Drop' },
+  { href: '/galeria', label: 'Galería' },
+  { href: '/blog', label: 'Blog' },
   { href: '/sobre-nosotros', label: 'Sobre nosotros' },
   { href: '/contacto', label: 'Contacto' },
 ]

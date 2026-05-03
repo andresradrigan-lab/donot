@@ -20,14 +20,18 @@ El producto se organiza en **Droops** (colecciones limitadas de sabores). El Dro
 
 Antes de escribir una sola línea de código, lee estos documentos **en este orden**:
 
-1. **`docs/SPEC.md`** — Qué se construye y cómo se comporta
-2. **`docs/PRODUCT_CATALOG.md`** — Productos reales (Droops, cajas, sabores) con precios y descripciones oficiales
-3. **`docs/DESIGN_SYSTEM.md`** — Paleta, tipografías, copy, mascota, tono de marca
-4. **`docs/MOCKUP_REFERENCE.md`** — Descripción del flujo de configurador en 2 pasos del mockup vigente
-5. **`docs/PAYMENT_INTEGRATIONS.md`** — Detalle técnico de las 3 pasarelas chilenas
-6. **`docs/BACKLOG.md`** — Sprints ordenados por dependencias. **Empieza siempre por el sprint marcado como "siguiente"**
+1. **`docs/HANDOFF.md`** — Estado actual del proyecto en producción, decisiones técnicas críticas, accesos, reglas para el agente
+2. **`docs/SPEC.md`** — Qué se construye y cómo se comporta
+3. **`docs/PRODUCT_CATALOG.md`** — Productos reales (Droops, cajas, sabores) con precios y descripciones oficiales
+4. **`docs/DESIGN_SYSTEM.md`** — Paleta, tipografías, copy, mascota, tono de marca
+5. **`docs/MOCKUP_REFERENCE.md`** — Descripción del flujo de configurador en 2 pasos del mockup vigente
+6. **`docs/HOSTINGER_DEPLOY.md`** — Cómo se deploya (integración nativa Hostinger ↔ GitHub)
+7. **`docs/PAYMENT_INTEGRATIONS.md`** — Detalle técnico de las pasarelas chilenas
+8. **`docs/BACKLOG.md`** — Sprints completados + estado actual
 
-Cuando termines un sprint, marca su checkbox en `BACKLOG.md` y haz commit antes de pasar al siguiente.
+> **El proyecto YA ESTÁ EN PRODUCCIÓN** en `https://donot.cl`. La fase
+> actual es pulido de UX/UI y operación, no construcción de features.
+> Léelo `HANDOFF.md` antes de cualquier cosa.
 
 ---
 

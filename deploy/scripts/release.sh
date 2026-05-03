@@ -63,14 +63,23 @@ ln -sfn "${RELEASE_DIR}/node_modules" "${RELEASE_DIR}/.next/standalone/node_modu
 echo "==> Switching symlink…"
 ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"
 
-echo "==> Reload PM2…"
-cd "${APP_ROOT}/current"
-if pm2 describe donot > /dev/null 2>&1; then
-  pm2 reload ecosystem.config.js --update-env
-else
-  pm2 start ecosystem.config.js
+echo "==> Reload Passenger (LiteSpeed Node) — touch restart.txt…"
+PUBLIC_HTML="${HOME}/domains/donot.cl/public_html"
+if [ -d "${PUBLIC_HTML}" ]; then
+  mkdir -p "${PUBLIC_HTML}/tmp"
+  touch "${PUBLIC_HTML}/tmp/restart.txt"
+  echo "    Passenger marked for reload"
 fi
-pm2 save > /dev/null
+
+# PM2 queda como fallback de monitoreo, pero Passenger es lo que sirve
+# las requests del dominio. Si el process no está bajo PM2 ya, no lo
+# arranca de cero (evita ocupar puertos en conflicto con Passenger).
+if pm2 describe donot > /dev/null 2>&1; then
+  echo "==> Reload PM2 (proceso existente)…"
+  cd "${APP_ROOT}/current"
+  pm2 reload ecosystem.config.js --update-env
+  pm2 save > /dev/null
+fi
 
 echo "==> Limpiando releases viejas (manteniendo ${KEEP_RELEASES})…"
 cd "${APP_ROOT}/releases"

@@ -1,6 +1,11 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ShoppingBag } from 'lucide-react'
+import { readCart } from '@/lib/cart'
+import { openMiniCart } from '@/components/store/MiniCart'
 
 const NAV = [
   { href: '/', label: 'Inicio' },
@@ -10,8 +15,24 @@ const NAV = [
 ]
 
 export function Header() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const refresh = () => {
+      const cart = readCart()
+      setCount(cart.items.reduce((s, it) => s + it.quantity, 0))
+    }
+    refresh()
+    window.addEventListener('donot:cart-updated', refresh)
+    window.addEventListener('storage', refresh)
+    return () => {
+      window.removeEventListener('donot:cart-updated', refresh)
+      window.removeEventListener('storage', refresh)
+    }
+  }, [])
+
   return (
-    <header className="sticky top-0 z-40 bg-donot-crema/95 backdrop-blur border-b border-donot-border">
+    <header className="sticky top-0 z-30 bg-donot-crema/95 backdrop-blur border-b border-donot-border">
       <div className="max-w-8xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between gap-6">
         <Link href="/" aria-label="donot. — ir al inicio" className="shrink-0">
           <Image
@@ -36,13 +57,19 @@ export function Header() {
           ))}
         </nav>
 
-        <Link
-          href="/carrito"
+        <button
+          type="button"
+          onClick={() => openMiniCart()}
           aria-label="Ver mi cajita"
           className="relative inline-flex items-center justify-center h-11 w-11 rounded-full bg-donot-verde text-donot-crema hover:bg-donot-verde/90 transition"
         >
           <ShoppingBag size={20} />
-        </Link>
+          {count > 0 && (
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-donot-naranjo text-white text-[10px] font-bold border-2 border-donot-crema">
+              {count}
+            </span>
+          )}
+        </button>
       </div>
     </header>
   )

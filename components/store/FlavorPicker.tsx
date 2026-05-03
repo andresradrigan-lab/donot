@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { Minus, Plus, Check } from 'lucide-react'
 import type { Flavor, Box } from '@prisma/client'
 import { cn } from '@/lib/utils'
@@ -16,6 +15,7 @@ import {
   type CartItem,
 } from '@/lib/cart'
 import { analytics } from '@/lib/analytics'
+import { openMiniCart } from '@/components/store/MiniCart'
 
 interface Props {
   box: Box
@@ -30,7 +30,6 @@ function uuid(): string {
 }
 
 export function FlavorPicker({ box, flavors }: Props) {
-  const router = useRouter()
   const [selection, setSelection] = useState<Record<string, number>>({})
   const [hydrated, setHydrated] = useState(false)
 
@@ -113,7 +112,9 @@ export function FlavorPicker({ box, flavors }: Props) {
       ],
     })
 
-    router.push('/carrito')
+    // Abrimos el mini cart en la misma página en lugar de redirigir.
+    // El usuario puede sumar otra cajita o ir al carrito desde el drawer.
+    openMiniCart()
   }
 
   return (

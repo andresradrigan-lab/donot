@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { BoxCard } from '@/components/store/BoxCard'
+import { InstagramFeed } from '@/components/store/InstagramFeed'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,6 +104,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <InstagramFeed />
     </>
   )
 }

@@ -1,5 +1,5 @@
 // =============================================================
-// donot-platform — Prisma schema
+// donot-platform — Prisma schema (MariaDB / MySQL)
 // Documentación completa: docs/SPEC.md sección 5
 // =============================================================
 
@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -86,8 +86,8 @@ enum WebhookStatus {
 model Droop {
   id            String   @id @default(uuid())
   code          String   @unique // "droop_001"
-  name          String              // "Droop 001"
-  tagline       String?             // "La primera carga"
+  name          String
+  tagline       String?
   description   String?  @db.Text
   coverImage    String?
   startsAt      DateTime
@@ -103,16 +103,19 @@ model Droop {
 }
 
 /// Caja (producto principal). El usuario configura sabores dentro.
+/// availableWeekdays se guarda como JSON (array de ints 0..6, dom..sab),
+/// porque MySQL/MariaDB no soporta arrays nativos. El filtrado por día
+/// actual se hace en memoria en lib/catalog.ts.
 model Box {
   id                   String      @id @default(uuid())
-  slug                 String      @unique // "caja-6-premium"
+  slug                 String      @unique
   name                 String
   category             BoxCategory
-  slotCount            Int         // 4 o 6
-  priceClp             Int         // en pesos
+  slotCount            Int
+  priceClp             Int
   images               Json        // string[] de URLs
   isActive             Boolean     @default(true)
-  availableWeekdays    Int[]       @default([0, 1, 2, 3, 4, 5, 6]) // 0=domingo
+  availableWeekdays    Json        // number[] (0=dom..6=sab)
   availableFrom        DateTime?
   availableTo          DateTime?
   sortOrder            Int         @default(0)
@@ -127,18 +130,18 @@ model Box {
 /// Sabor individual (sub-producto). Pertenece a un Droop opcional.
 model Flavor {
   id                String          @id @default(uuid())
-  slug              String          @unique // "tiramisu"
-  name              String                  // "Tiramisú"
+  slug              String          @unique
+  name              String
   category          FlavorCategory
   description       String          @db.Text
-  imageUrl          String
+  imageUrl          String          @db.Text
   droopId           String?
   droop             Droop?          @relation(fields: [droopId], references: [id])
   stock             Int             @default(0)
   stockResetDaily   Boolean         @default(false)
   dailyCapacity     Int?
   isActive          Boolean         @default(true)
-  availableWeekdays Int[]           @default([0, 1, 2, 3, 4, 5, 6])
+  availableWeekdays Json            // number[] (0=dom..6=sab)
   sortOrder         Int             @default(0)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -151,17 +154,17 @@ model Flavor {
 /// Pedido del cliente.
 model Order {
   id                  String          @id @default(uuid())
-  orderNumber         String          @unique // "DN-2026-0042"
+  orderNumber         String          @unique
   customerEmail       String
   customerName        String
   customerPhone       String
 
   deliveryMethod      DeliveryMethod
-  deliveryAddress     String?
+  deliveryAddress     String?         @db.Text
   deliveryCommune     String?
   deliveryNotes       String?         @db.Text
   deliveryDate        DateTime?
-  deliveryTimeSlot    String?         // "10-13", "13-17", "17-20"
+  deliveryTimeSlot    String?
 
   subtotalClp         Int
   discountClp         Int             @default(0)
@@ -175,7 +178,7 @@ model Order {
   paymentId           String?
   paymentStatus       PaymentStatus   @default(PENDING)
 
-  publicToken         String          @unique // token para tracking público
+  publicToken         String          @unique
 
   paidAt              DateTime?
   preparingAt         DateTime?
@@ -192,6 +195,7 @@ model Order {
   @@index([status, createdAt])
   @@index([paymentId])
   @@index([deliveryDate])
+  @@index([couponCode])
 }
 
 /// Línea de pedido — una caja con sus sabores.
@@ -203,13 +207,14 @@ model OrderItem {
   box               Box      @relation(fields: [boxId], references: [id])
   boxNameSnapshot   String
   boxPriceSnapshot  Int
-  flavors           Json     // [{ flavorId, flavorName, qty }]
+  flavors           Json     // [{ flavorSlug, flavorName, qty }]
   quantity          Int      @default(1)
   lineTotalClp      Int
 
   createdAt         DateTime @default(now())
 
   @@index([orderId])
+  @@index([boxId])
 }
 
 /// Cupón de descuento.
@@ -217,7 +222,7 @@ model Coupon {
   id                  String     @id @default(uuid())
   code                String     @unique
   type                CouponType
-  value               Int        // % o monto fijo según type
+  value               Int
   minOrderClp         Int?
   maxUses             Int?
   usesCount           Int        @default(0)
@@ -265,11 +270,13 @@ model AdminUser {
 }
 
 /// Auditoría de webhooks de pasarelas (idempotencia + debugging).
+/// MySQL/MariaDB tratan múltiples NULL como distintos en unique indexes,
+/// así que el unique compuesto sigue funcionando aun con externalId null.
 model WebhookLog {
   id            String          @id @default(uuid())
   provider      WebhookProvider
   eventType     String
-  externalId    String?         // payment_id u otro
+  externalId    String?
   payload       Json
   headers       Json
   status        WebhookStatus   @default(RECEIVED)
@@ -281,11 +288,12 @@ model WebhookLog {
 
   @@unique([provider, externalId])
   @@index([provider, status])
+  @@index([orderId])
 }
 
 /// Configuración global del sitio (key-value).
 model SiteSetting {
-  key         String   @id // "free_shipping_threshold_clp", "pickup_address_concon", etc.
+  key         String   @id @db.VarChar(80)
   value       String   @db.Text
   description String?
   updatedAt   DateTime @updatedAt

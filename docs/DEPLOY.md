@@ -1,70 +1,69 @@
-# DEPLOY.md — Cómo subir donot.cl a producción
+# DEPLOY.md — Cómo subir donot.cl a producción (Hostinger Cloud Hosting)
 
-> Esta guía te lleva de "VPS recién creado" a "donot.cl con SSL recibiendo
-> pedidos". Asume Hostinger VPS KVM 2 con Ubuntu 24.04, dominio `donot.cl`
-> con DNS gestionable y un repo en GitHub.
+> Esta guía asume **Hostinger Cloud Hosting** (no VPS). El servidor ya
+> tiene Node 20 disponible vía nvm, MariaDB compartido, PM2 y Git. SSH
+> en el puerto **65002**. Hostinger maneja Apache + SSL + dominios desde
+> hPanel; tú solo configuras tu app Node.js apuntando al directorio del
+> dominio.
+
+Servidor actual:
+- IP: `147.79.93.218`
+- SSH: `ssh -p 65002 u530306321@147.79.93.218`
+- Path home: `/home/u530306321/`
+- Path app: `~/donot-platform/`
 
 ---
 
 ## 0. Antes de empezar — checklist
 
-- [ ] VPS Ubuntu 24.04 creado en Hostinger con IP fija
-- [ ] Llave SSH en tu máquina local con acceso root al VPS
-- [ ] DNS de `donot.cl` accesible (Hostinger, Cloudflare, NIC.cl, etc.)
-- [ ] Repo en GitHub con permisos para crear secrets
-- [ ] Cuenta Resend con dominio `donot.cl` verificado (DKIM/SPF/MX)
-- [ ] Credenciales **productivas** de Mercado Pago (no sandbox)
+- [x] Dominio `donot.cl` agregado en hPanel → Dominios
+- [x] Llave SSH instalada en `~/.ssh/authorized_keys` (ya hecho)
+- [ ] BD MariaDB creada en hPanel
+- [ ] Aplicación Node.js registrada en hPanel apuntando a `~/donot-platform/current/`
+- [ ] Credenciales productivas de Mercado Pago
+- [ ] Cuenta Resend con dominio `donot.cl` verificado
 
 ---
 
-## 1. Provisionar el VPS (5–10 min)
+## 1. Crear la BD MariaDB en hPanel (3 min)
 
-Subes una vez el script de provisionamiento y lo corres.
-
-```bash
-# En tu local
-scp deploy/scripts/provision-vps.sh root@TU.IP.DEL.VPS:/root/
-
-# SSH al VPS
-ssh root@TU.IP.DEL.VPS
-chmod +x provision-vps.sh
-sudo ./provision-vps.sh
-```
-
-El script imprime al final:
-- La contraseña generada para el usuario `donot` de Postgres
-- El `DATABASE_URL` listo para pegar en producción
-
-**Anótalos.** Lo necesitas en el paso 3.
+1. **hPanel → Bases de datos → MySQL**
+2. Click en **"Crear nueva base de datos"** o "Add new database"
+3. Datos:
+   - **Nombre BD:** `donot_prod` (queda `u530306321_donot_prod` con prefijo)
+   - **Usuario:** `donot_app` (queda `u530306321_donot_app`)
+   - **Contraseña:** generala fuerte y guárdala
+4. **Charset:** `utf8mb4`, collation `utf8mb4_unicode_ci`
+5. Anota:
+   - Host: `localhost`
+   - Puerto: `3306`
+   - DB name (con prefijo)
+   - User (con prefijo)
+   - Password
 
 ---
 
-## 2. Subir tu llave de deploy
+## 2. Crear la aplicación Node.js en hPanel (3 min)
 
-GitHub Actions necesita una llave SSH propia para conectarse al VPS.
-
-```bash
-# En tu local — generar par dedicado para CI
-ssh-keygen -t ed25519 -C "github-actions-donot" -f ~/.ssh/donot_deploy -N ""
-
-# Copiar la pública al VPS al usuario "donot"
-ssh-copy-id -i ~/.ssh/donot_deploy.pub donot@TU.IP.DEL.VPS
-
-# Probar
-ssh -i ~/.ssh/donot_deploy donot@TU.IP.DEL.VPS "whoami"
-# debe devolver: donot
-```
-
-Guarda el contenido completo de `~/.ssh/donot_deploy` (la **privada**)
-para el paso 6.
+1. **hPanel → Avanzado → Aplicaciones Node.js → "Crear aplicación"**
+2. Datos:
+   - **Versión Node:** `20.x` (debe estar `>= 20`)
+   - **Application root:** `/home/u530306321/donot-platform/current/`
+   - **Application URL:** `donot.cl`
+   - **Application startup file:** `.next/standalone/server.js`
+   - **Modo:** `production`
+3. Guardar. Hostinger asigna un puerto interno y configura el reverse
+   proxy automáticamente.
 
 ---
 
-## 3. Pegar las variables de entorno en el VPS
+## 3. Pegar las variables de entorno en el servidor
 
 ```bash
-ssh donot@TU.IP.DEL.VPS
-sudo nano /var/www/donot-platform/shared/.env.production
+ssh -p 65002 u530306321@147.79.93.218
+mkdir -p ~/donot-platform/{shared,releases,backups}
+mkdir -p ~/donot-platform/shared/uploads
+nano ~/donot-platform/shared/.env.production
 ```
 
 Pega el contenido de [`deploy/env.production.example`](../deploy/env.production.example)
@@ -72,110 +71,69 @@ y reemplaza:
 
 | Variable | De dónde sacarla |
 |---|---|
-| `DATABASE_URL` | la que imprimió `provision-vps.sh` |
-| `JWT_SECRET` | `openssl rand -base64 32` (corre en tu local) |
+| `DATABASE_URL` | `mysql://u530306321_donot_app:<pass>@localhost:3306/u530306321_donot_prod` |
+| `JWT_SECRET` | `openssl rand -base64 32` (en tu local) |
 | `MP_ACCESS_TOKEN` / `MP_PUBLIC_KEY` | panel de Mercado Pago → Producción |
 | `MP_WEBHOOK_SECRET` | activa firma de webhooks en MP, pega el secret |
 | `RESEND_API_KEY` | resend.com → API Keys, después de verificar dominio |
 
-Permisos:
 ```bash
-sudo chown donot:donot /var/www/donot-platform/shared/.env.production
-sudo chmod 600         /var/www/donot-platform/shared/.env.production
+chmod 600 ~/donot-platform/shared/.env.production
 ```
 
 ---
 
-## 4. Apuntar DNS de donot.cl al VPS
-
-En tu panel DNS, crear:
-
-| Tipo | Nombre | Valor | TTL |
-|---|---|---|---|
-| A | `@` | `IP.DEL.VPS` | 300 |
-| A | `www` | `IP.DEL.VPS` | 300 |
-
-Esperar 5–30 min y verificar:
-```bash
-dig +short donot.cl
-dig +short www.donot.cl
-# ambos deben devolver la IP del VPS
-```
-
----
-
-## 5. NGINX + SSL Let's Encrypt
-
-```bash
-ssh root@TU.IP.DEL.VPS
-
-# Subir el config de nginx (desde tu local en otra terminal):
-# scp deploy/nginx/donot.cl.conf root@TU.IP.DEL.VPS:/etc/nginx/sites-available/donot.cl
-
-sudo ln -s /etc/nginx/sites-available/donot.cl /etc/nginx/sites-enabled/donot.cl
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl reload nginx
-
-# SSL con certbot (después de que el DNS propague)
-sudo certbot --nginx -d donot.cl -d www.donot.cl \
-  --non-interactive --agree-tos -m andres@morgansmedia.cl --redirect
-
-# Renovación automática (certbot ya instala el timer; verificar):
-sudo systemctl list-timers | grep certbot
-```
-
----
-
-## 6. Configurar GitHub Actions secrets
+## 4. Configurar GitHub Actions secrets
 
 Repo → Settings → Secrets and variables → Actions → **New repository secret**.
 
 | Secret | Valor |
 |---|---|
-| `DEPLOY_HOST` | IP o `donot.cl` |
-| `DEPLOY_USER` | `donot` |
-| `DEPLOY_SSH_KEY` | contenido completo de `~/.ssh/donot_deploy` (privada) |
+| `DEPLOY_HOST` | `147.79.93.218` |
+| `DEPLOY_USER` | `u530306321` |
+| `DEPLOY_SSH_KEY` | contenido completo de la llave **privada** (`donot_hostinger`) |
 
-También crear un *Environment* `production` con required reviewers si quieres
-gatear deploys manualmente.
+También crear un *Environment* `production` con required reviewers si
+quieres gatear deploys manualmente.
 
 ---
 
-## 7. Primer deploy
+## 5. Primer deploy
 
-Push a `main` o **Run workflow** manualmente desde la pestaña Actions.
+Push a `main` o "Run workflow" desde la pestaña Actions.
 
 El workflow:
-1. Hace `npm ci` + `prisma generate` + `npm run build`
-2. Empaqueta `.next/standalone` + `static` + `public/` + `prisma/`
-3. `rsync` al VPS a `/var/www/donot-platform/releases/<timestamp>-<sha>/`
-4. Corre [`release.sh`](../deploy/scripts/release.sh) que:
+1. `npm ci` + `prisma generate` + `npm run build` (standalone)
+2. Empaqueta `.next/` + `public/` + `prisma/` + `deploy/` + `package*.json` + `ecosystem.config.js`
+3. `rsync` por SSH al servidor en `~/donot-platform/releases/<timestamp>-<sha>/`
+4. Corre [`release.sh`](../deploy/scripts/release.sh) en el servidor:
    - Enlaza `.env.production` y `public/uploads/` desde `shared/`
-   - Aplica `prisma migrate deploy`
+   - `prisma migrate deploy`
    - Mueve el symlink `current/`
    - `pm2 reload`
 5. Hace `curl https://donot.cl/api/health` y falla si no responde 200
 
 ---
 
-## 8. Seed inicial (solo la primera vez)
+## 6. Seed inicial (solo la primera vez)
 
-Después del primer deploy exitoso, sembrar Droop 001 + admin OWNER:
+Después del primer deploy exitoso:
 
 ```bash
-ssh donot@TU.IP.DEL.VPS
-cd /var/www/donot-platform/current
-npx prisma db seed
+ssh -p 65002 u530306321@147.79.93.218
+cd ~/donot-platform/current
+. ~/.nvm/nvm.sh && nvm use 20
+DATABASE_URL="$(grep DATABASE_URL ~/donot-platform/shared/.env.production | cut -d= -f2-)" \
+  npx prisma db seed
 ```
 
 Login admin: `https://donot.cl/admin/login`
 - Email: el que dejaste en `ADMIN_INITIAL_EMAIL`
-- Password: el de `ADMIN_INITIAL_PASSWORD` — **cambiarla apenas entres** desde `/admin/usuarios`
+- Password: el de `ADMIN_INITIAL_PASSWORD` — **cámbiala apenas entres** desde `/admin/usuarios`
 
 ---
 
-## 9. UptimeRobot
+## 7. UptimeRobot
 
 Crear monitor HTTP(S) en [uptimerobot.com](https://uptimerobot.com):
 - URL: `https://donot.cl/api/health`
@@ -184,24 +142,24 @@ Crear monitor HTTP(S) en [uptimerobot.com](https://uptimerobot.com):
 
 ---
 
-## 10. Backups
+## 8. Backups diarios
 
-Ya hay [`deploy/scripts/backup-db.sh`](../deploy/scripts/backup-db.sh)
-que rota 30 días local en `/var/backups/donot/`.
+Hay [`deploy/scripts/backup-db.sh`](../deploy/scripts/backup-db.sh) listo
+con rotación 30 días. Programar con cron:
 
-```bash
-ssh donot@TU.IP.DEL.VPS
-crontab -e
-# Sumar:
-0 3 * * * /var/www/donot-platform/current/deploy/scripts/backup-db.sh >> /var/log/donot-backup.log 2>&1
-```
+**hPanel → Avanzado → Cron Jobs → "Crear nuevo cron job"**:
+- Comando:
+  ```
+  /home/u530306321/donot-platform/current/deploy/scripts/backup-db.sh >> /home/u530306321/donot-platform/backup.log 2>&1
+  ```
+- Cuándo: diario a las 3 AM (`0 3 * * *`)
 
-Para sumar destino remoto (Backblaze B2 / S3): descomentar el bloque al
-final del script y exportar `B2_BUCKET` y credenciales.
+Hostinger también tiene **backups automáticos del plan** de toda la
+cuenta (hPanel → Backups). Son backup adicional — no reemplazan al cron.
 
 ---
 
-## 11. Configurar plataformas desde el admin
+## 9. Configurar plataformas desde el admin
 
 **Sin volver a tocar `.env`.** Entrar a `https://donot.cl/admin/config`:
 
@@ -212,7 +170,7 @@ final del script y exportar `B2_BUCKET` y credenciales.
 
 ---
 
-## 12. Mercado Pago — webhook en producción
+## 10. Mercado Pago — webhook en producción
 
 En el panel de MP → Notificaciones → Webhooks:
 
@@ -220,16 +178,17 @@ En el panel de MP → Notificaciones → Webhooks:
 - Eventos: `payment.created`, `payment.updated`
 - Activar firma y pegar el secret en `MP_WEBHOOK_SECRET` del `.env.production`
 
-Reiniciar PM2 después de cambiar el `.env`:
+Después de cambiar `.env.production`:
 ```bash
-ssh donot@TU.IP.DEL.VPS
-cd /var/www/donot-platform/current
+ssh -p 65002 u530306321@147.79.93.218
+cd ~/donot-platform/current
+. ~/.nvm/nvm.sh && nvm use 20
 pm2 reload ecosystem.config.js --update-env
 ```
 
 ---
 
-## 13. Pruebas finales del equipo
+## 11. Pruebas finales del equipo
 
 Cada miembro hace 1 pedido real con tarjeta de prueba de MP y verifica:
 
@@ -244,11 +203,10 @@ Cada miembro hace 1 pedido real con tarjeta de prueba de MP y verifica:
 
 ## Checklist final pre-soft-launch
 
-- [ ] `https://donot.cl` carga, SSL válido, redirect 80→443
-- [ ] `https://www.donot.cl` redirige a `https://donot.cl`
+- [ ] `https://donot.cl` carga, SSL válido (Hostinger emite certificado)
 - [ ] `https://donot.cl/api/health` devuelve 200
 - [ ] UptimeRobot monitorea
-- [ ] Backups ejecutándose en cron
+- [ ] Cron de backup configurado
 - [ ] Resend enviando correos reales
 - [ ] Mercado Pago en producción cobrando
 - [ ] GTM/GA4/Pixel cargados (verificar con Tag Assistant)
@@ -262,7 +220,8 @@ Cada miembro hace 1 pedido real con tarjeta de prueba de MP y verifica:
 
 **Logs en vivo:**
 ```bash
-ssh donot@TU.IP.DEL.VPS
+ssh -p 65002 u530306321@147.79.93.218
+. ~/.nvm/nvm.sh && nvm use 20
 pm2 logs donot
 ```
 
@@ -270,15 +229,19 @@ pm2 logs donot
 
 **Rollback rápido:**
 ```bash
-ssh donot@TU.IP.DEL.VPS
-cd /var/www/donot-platform
+ssh -p 65002 u530306321@147.79.93.218
+cd ~/donot-platform
 ls releases/   # elegir la anterior
-ln -sfn /var/www/donot-platform/releases/<release-anterior> current
+ln -sfn ~/donot-platform/releases/<release-anterior> current
+. ~/.nvm/nvm.sh && nvm use 20
 pm2 reload ecosystem.config.js --update-env
 ```
 
-**Acceder a la BD:**
+**BD por CLI:**
 ```bash
-ssh donot@TU.IP.DEL.VPS
-psql -U donot -d donot_prod
+ssh -p 65002 u530306321@147.79.93.218
+mariadb -h localhost -u u530306321_donot_app -p u530306321_donot_prod
 ```
+
+**BD por phpMyAdmin:** hPanel → Bases de datos → "Administrar" → abre
+con sesión iniciada.

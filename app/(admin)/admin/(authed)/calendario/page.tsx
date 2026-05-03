@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { prisma } from '@/lib/db'
+import { weekdaysFromJson } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -94,14 +95,14 @@ export default async function CalendarPage({
 
     const activeBoxes = boxes.filter((b) => {
       if (!b.isActive) return false
-      if (!b.availableWeekdays.includes(weekday)) return false
+      if (!weekdaysFromJson(b.availableWeekdays).includes(weekday)) return false
       if (b.availableFrom && date < b.availableFrom) return false
       if (b.availableTo && date > b.availableTo) return false
       return true
     }).length
 
     const activeFlavors = flavors.filter((f) => {
-      if (!f.availableWeekdays.includes(weekday)) return false
+      if (!weekdaysFromJson(f.availableWeekdays).includes(weekday)) return false
       if (!f.droopId) return true
       const droop = droops.find((dr) => dr.id === f.droopId)
       if (!droop) return false

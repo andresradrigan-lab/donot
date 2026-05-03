@@ -8,6 +8,7 @@ import type { Flavor, Droop, FlavorCategory } from '@prisma/client'
 import { ImageUploader } from '@/components/admin/ImageUploader'
 import { WeekdayPicker } from '@/components/admin/WeekdayPicker'
 import { Button } from '@/components/ui/Button'
+import { weekdaysFromJson } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 
 type FlavorWithDroop = Flavor & { droop: { code: string; name: string } | null }
@@ -61,7 +62,7 @@ function toDraft(f: FlavorWithDroop): Draft {
     stockResetDaily: f.stockResetDaily,
     dailyCapacity: f.dailyCapacity ?? '',
     isActive: f.isActive,
-    availableWeekdays: f.availableWeekdays,
+    availableWeekdays: weekdaysFromJson(f.availableWeekdays),
     sortOrder: f.sortOrder,
   }
 }

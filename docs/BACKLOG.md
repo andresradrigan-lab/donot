@@ -241,17 +241,21 @@ Ordenados por dependencias. **Empieza siempre por el sprint marcado como "activo
 
 **Objetivo:** El equipo prueba todo en producción staging, ajusta copies, monitorea, y pasa a producción real.
 
-- [x] Setup VPS Hostinger KVM 2 — `deploy/scripts/provision-vps.sh` automatiza Ubuntu 24.04 + Node 20 + Postgres 16 + NGINX + Certbot + PM2 + UFW
-- [x] Deploy con PM2 vía GitHub Actions — `.github/workflows/deploy.yml` empaqueta `.next/standalone`, rsync al VPS, `release.sh` migra + symlink + reload
-- [ ] **DNS de `donot.cl` apuntando al VPS** (manual del usuario)
-- [x] SSL via Let's Encrypt — comando documentado en `docs/DEPLOY.md` §5
-- [x] UptimeRobot configurado contra `/api/health` — endpoint creado, instrucción en `docs/DEPLOY.md` §9
-- [x] Backups diarios `pg_dump` — `deploy/scripts/backup-db.sh` con rotación 30d, hook opcional para B2
-- [ ] Pruebas manuales del equipo: cada uno hace 1 pedido real y verifica el flujo completo (esperando VPS arriba)
-- [ ] Ajustes de copies y plantillas de email según feedback (post-soft-launch)
+- [x] Adaptado a **Hostinger Cloud Hosting** (no VPS): SSH puerto 65002, app en `~/donot-platform/`, Hostinger maneja Apache + SSL + dominios desde hPanel
+- [x] **Migración Postgres → MariaDB** completa: `provider = "mysql"` en Prisma, `Int[]` → `Json` en availableWeekdays con helper `weekdaysFromJson`, queries de array filtradas en memoria, queries `mode: 'insensitive'` removidos (collation utf8mb4_unicode_ci ya es CI), seed actualizado, docker-compose pasa a MariaDB 11
+- [x] `release.sh` adaptado a paths Hostinger (~/donot-platform/{shared,releases,current,backups}), nvm + pm2
+- [x] `deploy.yml` con puerto SSH 65002, rsync sin chmod (CageFS), health check post-deploy
+- [x] `ci.yml` con MariaDB efímero
+- [x] Estructura inicializada en el servidor: ~/donot-platform/{shared,releases,backups}
+- [x] Llave SSH dedicada para deploy (`~/.ssh/donot_hostinger`) instalada en authorized_keys del servidor
+- [x] Endpoint /api/health pinga la BD y devuelve uptime
+- [ ] **BD MariaDB en hPanel** (manual del usuario, 3 min)
+- [ ] **Aplicación Node.js en hPanel** (manual del usuario, 3 min)
+- [ ] **GitHub secrets** (DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY) — manual del usuario
+- [ ] Cron de backup en hPanel (manual del usuario)
+- [ ] Pruebas manuales del equipo (esperando primer deploy)
 - [ ] Onboarding a Fernanda y Luigi con tutorial breve (post-soft-launch)
-- [x] Bonus: `next.config.js` con headers de seguridad + HSTS prod, `output: 'standalone'`, Next subido a 14.2.35 (vuln crítica de Sprint 0 cerrada), Transbank-SDK removido (no se usa, eliminó vulns de axios)
-- [x] Bonus: CI en cada PR (`.github/workflows/ci.yml`) con typecheck + lint + build contra Postgres efímero
+- [x] Bonus: Next 14.2.35 (vuln crítica cerrada), Transbank-SDK removido, headers de seguridad + HSTS prod, `output: 'standalone'`
 
 **Definition of done:** primera venta real en producción. Sistema corriendo 7 días sin downtime.
 

@@ -177,6 +177,7 @@ async function main() {
         stockResetDaily: true,
         dailyCapacity: 50,
         isActive: true,
+        availableWeekdays: [0, 1, 2, 3, 4, 5, 6],
       },
     })
   }
@@ -235,6 +236,7 @@ async function main() {
       create: {
         ...b,
         images: [], // cargar fotos cuando estén las cajas armadas fotografiadas
+        availableWeekdays: [0, 1, 2, 3, 4, 5, 6],
       },
     })
   }

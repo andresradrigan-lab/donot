@@ -1,26 +1,40 @@
-# Postgres local para desarrollo de donot-platform.
+# MariaDB local para desarrollo de donot-platform.
+# Producción corre con MariaDB compartido de Hostinger Cloud Hosting,
+# así que dev = prod en motor de BD.
+#
 # Levantar con: docker compose up -d
 # Detener con:  docker compose down
-# Ver logs:     docker compose logs -f db
+# Logs:         docker compose logs -f db
+# Shell mysql:  docker exec -it donot-mariadb mariadb -udonot -pdonot_dev donot_db
 
 services:
   db:
-    image: postgres:16-alpine
-    container_name: donot-postgres
+    image: mariadb:11
+    container_name: donot-mariadb
     restart: unless-stopped
     environment:
-      POSTGRES_USER: donot
-      POSTGRES_PASSWORD: donot_dev
-      POSTGRES_DB: donot_db
+      MARIADB_DATABASE: donot_db
+      MARIADB_USER: donot
+      MARIADB_PASSWORD: donot_dev
+      MARIADB_ROOT_PASSWORD: donot_root_dev
+      MARIADB_AUTO_UPGRADE: 1
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --skip-character-set-client-handshake
     ports:
-      - "5433:5432"
+      - "3307:3306"
     volumes:
-      - donot-pg-data:/var/lib/postgresql/data
+      - donot-mariadb-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U donot -d donot_db"]
+      test:
+        [
+          'CMD-SHELL',
+          'mariadb-admin ping -h 127.0.0.1 -u donot -pdonot_dev || mysqladmin ping -h 127.0.0.1 -u donot -pdonot_dev',
+        ]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
 volumes:
-  donot-pg-data:
+  donot-mariadb-data:

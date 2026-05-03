@@ -9,6 +9,9 @@ concurrency:
   group: deploy-prod
   cancel-in-progress: false
 
+env:
+  DEPLOY_PORT: '65002' # Hostinger usa 65002, no 22
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,31 +39,17 @@ jobs:
 
       - name: Empaquetar release
         run: |
-          mkdir -p release
-          # Salida standalone + estáticos + public + manifests + scripts
-          rsync -a --delete \
-            .next/standalone/ \
-            .next/static/ \
-            public/ \
-            prisma/ \
-            ecosystem.config.js \
-            package.json \
-            package-lock.json \
-            deploy/ \
-            release/raw/ 2>/dev/null || true
-          # Estructura limpia:
-          rm -rf release/donot-platform
-          mkdir -p release/donot-platform
-          cp -r .next release/donot-platform/.next
-          cp -r public release/donot-platform/public
-          cp -r prisma release/donot-platform/prisma
-          cp -r deploy release/donot-platform/deploy
-          cp ecosystem.config.js package.json package-lock.json release/donot-platform/
+          mkdir -p out/donot-platform
+          cp -r .next out/donot-platform/.next
+          cp -r public out/donot-platform/public
+          cp -r prisma out/donot-platform/prisma
+          cp -r deploy out/donot-platform/deploy
+          cp ecosystem.config.js package.json package-lock.json out/donot-platform/
 
       - uses: actions/upload-artifact@v4
         with:
           name: release
-          path: release/donot-platform
+          path: out/donot-platform
           retention-days: 7
 
   deploy:
@@ -78,21 +67,22 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: Add VPS to known_hosts
+      - name: Add server to known_hosts
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ env.DEPLOY_PORT }} -H "$HOST" >> ~/.ssh/known_hosts
 
-      - name: Subir release al VPS
+      - name: Subir release al servidor
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
           REL: ${{ needs.build.outputs.release_id }}
         run: |
-          REMOTE_DIR="/var/www/donot-platform/releases/${REL}"
-          ssh ${USER}@${HOST} "mkdir -p ${REMOTE_DIR}"
-          rsync -az --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
-            release/ ${USER}@${HOST}:${REMOTE_DIR}/
+          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} "mkdir -p \$HOME/donot-platform/releases/${REL}"
+          rsync -az --delete -e "ssh -p ${{ env.DEPLOY_PORT }}" \
+            release/ ${USER}@${HOST}:donot-platform/releases/${REL}/
 
       - name: Activar release (migrate + symlink + pm2)
         env:
@@ -100,19 +90,19 @@ jobs:
           USER: ${{ secrets.DEPLOY_USER }}
           REL: ${{ needs.build.outputs.release_id }}
         run: |
-          REMOTE_DIR="/var/www/donot-platform/releases/${REL}"
-          ssh ${USER}@${HOST} "bash ${REMOTE_DIR}/deploy/scripts/release.sh ${REMOTE_DIR}"
+          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} \
+            "bash \$HOME/donot-platform/releases/${REL}/deploy/scripts/release.sh \$HOME/donot-platform/releases/${REL}"
 
       - name: Health check post-deploy
         run: |
-          sleep 5
-          for i in 1 2 3 4 5; do
+          sleep 8
+          for i in 1 2 3 4 5 6; do
             if curl -fsS https://donot.cl/api/health > /dev/null; then
               echo "✅  Health OK"
               exit 0
             fi
-            echo "Esperando health check…"
-            sleep 5
+            echo "Esperando health check ($i/6)…"
+            sleep 8
           done
           echo "❌  Health check falló tras deploy"
           exit 1

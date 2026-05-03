@@ -60,7 +60,8 @@ export default async function AdminOrdersPage({
 
   if (status && ALL_STATUSES.includes(status)) filters.status = status
   if (commune)
-    filters.deliveryCommune = { contains: commune, mode: 'insensitive' }
+    // En MySQL la collation utf8mb4_unicode_ci ya es case-insensitive.
+    filters.deliveryCommune = { contains: commune }
   if (dateStr) {
     const start = new Date(dateStr + 'T00:00:00')
     const end = new Date(dateStr + 'T23:59:59.999')

@@ -8,6 +8,7 @@ import { ImageUploader } from '@/components/admin/ImageUploader'
 import { WeekdayPicker } from '@/components/admin/WeekdayPicker'
 import { Button } from '@/components/ui/Button'
 import { formatClp } from '@/lib/format'
+import { weekdaysFromJson } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -54,7 +55,7 @@ function toDraft(b: Box): Draft {
     priceClp: b.priceClp,
     images,
     isActive: b.isActive,
-    availableWeekdays: b.availableWeekdays,
+    availableWeekdays: weekdaysFromJson(b.availableWeekdays),
     availableFrom: b.availableFrom ? b.availableFrom.toISOString().slice(0, 10) : '',
     availableTo: b.availableTo ? b.availableTo.toISOString().slice(0, 10) : '',
     sortOrder: b.sortOrder,

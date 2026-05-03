@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Sparkles, Clock, MapPin } from 'lucide-react'
+import { Sparkles, Clock, MapPin, ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { BoxCard } from '@/components/store/BoxCard'
@@ -222,6 +222,80 @@ export default async function HomePage() {
                 coverFlavorSlugs={coverFlavorSlugs}
               />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== DETRÁS DE LA MASA — grid de fotos ===== */}
+      <section className="px-6 md:px-10 py-16 md:py-20 bg-donot-rowAlt">
+        <div className="max-w-8xl mx-auto">
+          <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+            <div className="max-w-2xl">
+              <span className="inline-block px-3 py-1 rounded-full bg-donot-rosado/15 text-donot-rosado text-xs font-bold uppercase tracking-[0.2em] mb-3">
+                Behind the scenes
+              </span>
+              <h2 className="font-display text-3xl md:text-5xl text-donot-verde leading-[1.05]">
+                Detrás de <span className="text-donot-naranjo">la masa</span>.
+              </h2>
+              <p className="text-donot-muted mt-2 text-lg">
+                Sesión de cocina, 24 de abril 2026. Sin filtro, sin polish.
+              </p>
+            </div>
+            <Link
+              href="/galeria"
+              className="inline-flex items-center gap-2 text-donot-naranjo font-bold hover:gap-3 transition-all"
+            >
+              Ver galería completa <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {/* Masonry-ish grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-white col-span-2 row-span-2 md:aspect-auto md:row-span-2">
+              <Image
+                src="/photos/feed-2204.jpg"
+                alt="donot. detrás de cámaras"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-white">
+              <Image
+                src="/photos/feed-2218.jpg"
+                alt="donot. detalle"
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className="object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-white">
+              <Image
+                src="/photos/feed-2237.jpg"
+                alt="donot. caja premium"
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className="object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-white">
+              <Image
+                src="/photos/feed-2256.jpg"
+                alt="donot. producto"
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className="object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-white">
+              <Image
+                src="/photos/feed-2299.jpg"
+                alt="donot. cocina"
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className="object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
           </div>
         </div>
       </section>

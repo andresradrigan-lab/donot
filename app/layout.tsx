@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Bricolage_Grotesque, Manrope } from 'next/font/google'
+import { Sniglet, DM_Sans } from 'next/font/google'
 import './globals.css'
 import { GtmScript } from '@/components/store/GtmScript'
 import { MetaPixelScript } from '@/components/store/MetaPixelScript'
@@ -10,20 +10,20 @@ import { getPublicLayoutSettings } from '@/lib/settings'
 // SiteSetting de la BD, así que no tiene sentido cachear estáticamente.
 export const dynamic = 'force-dynamic'
 
-// Display: Bricolage Grotesque — sans display moderno con
-// personalidad, ancha en bold, encaja con la marca jovial-boutique.
-const bricolage = Bricolage_Grotesque({
+// Display: Sniglet — rounded jovial, la tipografía de marca original
+// que el cliente validó (mascota + paleta cálida + donas ⇒ rounded).
+const sniglet = Sniglet({
   subsets: ['latin'],
-  weight: ['500', '600', '700', '800'],
+  weight: ['800'],
   variable: '--font-display',
   display: 'swap',
 })
 
-// Sans: Manrope — geométrica, limpia, legible, con buen weight 800.
-// Reemplaza Inter (que se sentía genérico).
-const manrope = Manrope({
+// Sans: DM Sans — humanista limpia con un toque cálido. Reemplaza
+// Inter (genérica) y Manrope (muy fría) para body, copy y menú.
+const dmSans = DM_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
   display: 'swap',
 })
@@ -92,7 +92,7 @@ export default async function RootLayout({
   const base = appUrl()
 
   return (
-    <html lang="es-CL" className={`${bricolage.variable} ${manrope.variable}`}>
+    <html lang="es-CL" className={`${sniglet.variable} ${dmSans.variable}`}>
       <body className="font-sans antialiased">
         <GtmScript gtmId={s.analytics_gtm_id} />
         <MetaPixelScript pixelId={s.analytics_meta_pixel_id} />

@@ -14,13 +14,17 @@ import { prisma } from '@/lib/db'
  * Diseñado como server component: lee settings de BD una vez por render.
  */
 
+// Mientras no haya integración con Instagram Graph API ni se carguen
+// posts manualmente desde admin, mostramos fotos reales del local/producto
+// (sesión 24 abril 2026). El cliente puede swappear estas fotos por las
+// reales de su feed cuando se conecte la API.
 const PLACEHOLDER_TILES = [
-  { src: '/menu/cookies-and-cream.png', alt: 'Cookies & Cream' },
-  { src: '/menu/tiramisu.png', alt: 'Tiramisú' },
-  { src: '/menu/pie-de-manzana.png', alt: 'Pie de Manzana' },
-  { src: '/menu/crocanti.png', alt: 'Crocanti' },
-  { src: '/menu/glaseada.png', alt: 'Glaseada' },
-  { src: '/menu/alfajor.png', alt: 'Alfajor' },
+  { src: '/photos/feed-2204.jpg', alt: 'donot. — local Concón' },
+  { src: '/photos/feed-2218.jpg', alt: 'donot. — sesión donas' },
+  { src: '/photos/feed-2237.jpg', alt: 'donot. — caja premium' },
+  { src: '/photos/feed-2256.jpg', alt: 'donot. — detalle' },
+  { src: '/photos/feed-2273.jpg', alt: 'donot. — sabor' },
+  { src: '/photos/feed-2299.jpg', alt: 'donot. — producto' },
 ]
 
 interface InstagramPost {

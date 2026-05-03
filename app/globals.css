@@ -10,4 +10,41 @@ html,
 body {
   background-color: #FFF2E8;
   color: #1F1F1F;
+  /* Previene scroll horizontal por elementos decorativos absolute. */
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selección con paleta de marca */
+::selection {
+  background-color: #FF70C0;
+  color: #FFF2E8;
+}
+
+/* Contenedor general que respeta el viewport */
+.no-x-overflow {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Decorativos animados (orbitales, blobs) */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+@keyframes float-rev {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(-2deg); }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-rev {
+  animation: float-rev 10s ease-in-out infinite;
 }

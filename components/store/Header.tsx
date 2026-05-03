@@ -38,10 +38,10 @@ export function Header() {
       <div className="max-w-8xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between gap-6">
         <Link href="/" aria-label="donot. — ir al inicio" className="shrink-0">
           <Image
-            src="/brand/do-not-verde-fondo-crema.png"
+            src="/brand/do-not-verde-horizontal.png"
             alt="donot."
-            width={120}
-            height={48}
+            width={200}
+            height={56}
             priority
             className="h-10 w-auto md:h-12"
           />

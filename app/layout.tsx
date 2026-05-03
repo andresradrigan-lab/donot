@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Sniglet, Inter } from 'next/font/google'
+import { Fraunces, Manrope } from 'next/font/google'
 import './globals.css'
 import { GtmScript } from '@/components/store/GtmScript'
 import { MetaPixelScript } from '@/components/store/MetaPixelScript'
@@ -10,15 +10,21 @@ import { getPublicLayoutSettings } from '@/lib/settings'
 // SiteSetting de la BD, así que no tiene sentido cachear estáticamente.
 export const dynamic = 'force-dynamic'
 
-const sniglet = Sniglet({
+// Display: Fraunces — serif moderno con personalidad, italic opcional.
+// Da carácter editorial, encaja con la marca boutique.
+const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['800'],
+  weight: ['600', '700', '800', '900'],
+  style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
 })
 
-const inter = Inter({
+// Sans: Manrope — geométrica, limpia, legible, con buen weight 800.
+// Reemplaza Inter (que se sentía genérico).
+const manrope = Manrope({
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-sans',
   display: 'swap',
 })
@@ -87,7 +93,7 @@ export default async function RootLayout({
   const base = appUrl()
 
   return (
-    <html lang="es-CL" className={`${sniglet.variable} ${inter.variable}`}>
+    <html lang="es-CL" className={`${fraunces.variable} ${manrope.variable}`}>
       <body className="font-sans antialiased">
         <GtmScript gtmId={s.analytics_gtm_id} />
         <MetaPixelScript pixelId={s.analytics_meta_pixel_id} />

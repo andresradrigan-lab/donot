@@ -13,10 +13,9 @@ env:
   DEPLOY_PORT: '65002' # Hostinger usa 65002, no 22
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    outputs:
-      release_id: ${{ steps.id.outputs.release_id }}
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
@@ -36,31 +35,25 @@ jobs:
 
       - name: Build (standalone)
         run: npm run build
+        env:
+          # Placeholder solo para que Prisma client se construya. Las pages
+          # son force-dynamic, así que no se ejecutan queries en build.
+          DATABASE_URL: mysql://build:build@localhost:9999/build
 
-      - name: Empaquetar release
+      - name: Empaquetar release (tar.gz)
+        env:
+          REL: ${{ steps.id.outputs.release_id }}
         run: |
-          mkdir -p out/donot-platform
-          cp -r .next out/donot-platform/.next
-          cp -r public out/donot-platform/public
-          cp -r prisma out/donot-platform/prisma
-          cp -r deploy out/donot-platform/deploy
-          cp ecosystem.config.js package.json package-lock.json out/donot-platform/
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: release
-          path: out/donot-platform
-          retention-days: 7
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: release
-          path: release
+          mkdir -p out
+          tar -czf "out/${REL}.tar.gz" \
+            .next \
+            public \
+            prisma \
+            deploy \
+            ecosystem.config.js \
+            package.json \
+            package-lock.json
+          ls -lh out/
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -74,21 +67,23 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -p ${{ env.DEPLOY_PORT }} -H "$HOST" >> ~/.ssh/known_hosts
 
-      - name: Subir release al servidor
+      - name: Subir + descomprimir release en el servidor
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
-          REL: ${{ needs.build.outputs.release_id }}
+          REL: ${{ steps.id.outputs.release_id }}
         run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} "mkdir -p \$HOME/donot-platform/releases/${REL}"
-          rsync -az --delete -e "ssh -p ${{ env.DEPLOY_PORT }}" \
-            release/ ${USER}@${HOST}:donot-platform/releases/${REL}/
+          REMOTE_REL="\$HOME/donot-platform/releases/${REL}"
+          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} "mkdir -p ${REMOTE_REL}"
+          scp -P ${{ env.DEPLOY_PORT }} "out/${REL}.tar.gz" "${USER}@${HOST}:donot-platform/releases/${REL}.tar.gz"
+          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} \
+            "tar -xzf \$HOME/donot-platform/releases/${REL}.tar.gz -C \$HOME/donot-platform/releases/${REL}/ && rm \$HOME/donot-platform/releases/${REL}.tar.gz"
 
       - name: Activar release (migrate + symlink + pm2)
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
-          REL: ${{ needs.build.outputs.release_id }}
+          REL: ${{ steps.id.outputs.release_id }}
         run: |
           ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} \
             "bash \$HOME/donot-platform/releases/${REL}/deploy/scripts/release.sh \$HOME/donot-platform/releases/${REL}"

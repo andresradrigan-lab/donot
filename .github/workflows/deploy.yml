@@ -48,17 +48,21 @@ jobs:
           REL: ${{ steps.id.outputs.release_id }}
         run: |
           mkdir -p out
-          # node_modules se incluye para que `prisma migrate deploy` funcione
-          # en el servidor. Después del prune queda solo deps de runtime.
+          # node_modules se incluye para que `prisma migrate deploy` y `tsx
+          # prisma/seed.ts` funcionen en el servidor sin npm install ahí.
+          # lib/ y tsconfig.json son necesarios para que el seed (tsx)
+          # resuelva los imports.
           tar -czf "out/${REL}.tar.gz" \
             .next \
             public \
             prisma \
             deploy \
             node_modules \
+            lib \
             ecosystem.config.js \
             package.json \
-            package-lock.json
+            package-lock.json \
+            tsconfig.json
           ls -lh out/
 
       - name: Setup SSH

@@ -56,7 +56,11 @@ set -a
 # shellcheck disable=SC1091
 . "${SHARED_DIR}/.env.production"
 set +a
-npx --no prisma migrate deploy
+# Usamos el binario local del tarball (node_modules ya está dentro del release).
+node_modules/.bin/prisma migrate deploy
+
+# Standalone necesita node_modules para ejecutar Prisma client en runtime.
+ln -sfn "${RELEASE_DIR}/node_modules" "${RELEASE_DIR}/.next/standalone/node_modules"
 
 echo "==> Switching symlink…"
 ln -sfn "${RELEASE_DIR}" "${APP_ROOT}/current"

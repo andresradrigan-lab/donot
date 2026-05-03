@@ -40,16 +40,22 @@ jobs:
           # son force-dynamic, así que no se ejecutan queries en build.
           DATABASE_URL: mysql://build:build@localhost:9999/build
 
+      - name: Prune dev dependencies
+        run: npm prune --omit=dev
+
       - name: Empaquetar release (tar.gz)
         env:
           REL: ${{ steps.id.outputs.release_id }}
         run: |
           mkdir -p out
+          # node_modules se incluye para que `prisma migrate deploy` funcione
+          # en el servidor. Después del prune queda solo deps de runtime.
           tar -czf "out/${REL}.tar.gz" \
             .next \
             public \
             prisma \
             deploy \
+            node_modules \
             ecosystem.config.js \
             package.json \
             package-lock.json

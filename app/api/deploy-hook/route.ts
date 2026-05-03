@@ -7,15 +7,24 @@ import path from 'node:path'
 export const dynamic = 'force-dynamic'
 
 /**
- * Webhook de deploy. GitHub Actions (o cualquier cliente con el secret)
- * llama POST aquí con `{ commit }` en el body. Si el HMAC del header
- * `x-deploy-signature` valida, dispara el script local de deploy en
- * background y responde inmediatamente — el script hace git pull,
- * build y restart de Passenger.
+ * Webhook de deploy.
+ *
+ * GitHub Actions (o cualquier cliente con el secret) hace POST con:
+ *   {
+ *     "tarballUrl": "https://github.com/<repo>/releases/download/.../release.tar.gz",
+ *     "releaseId":  "<timestamp>-<sha>",
+ *     "tag":        "deploy-<id>",      // opcional, solo informativo
+ *     "commit":     "<sha completo>"     // opcional, solo informativo
+ *   }
+ *
+ * El header `X-Deploy-Signature` debe contener el HMAC-SHA256 hex del body
+ * usando DEPLOY_HOOK_SECRET. Si valida, se dispara el script local en
+ * background y respondemos inmediatamente — el script descarga el tarball
+ * y reinicia Passenger.
  *
  * Variables de entorno:
  *   DEPLOY_HOOK_SECRET — secret compartido para HMAC
- *   DEPLOY_HOOK_SCRIPT — path absoluto al script (default: ~/donot-platform/deploy.sh)
+ *   DEPLOY_HOOK_SCRIPT — path al script (default: ~/donot-platform/deploy.sh)
  */
 export async function POST(request: Request) {
   const secret = process.env.DEPLOY_HOOK_SECRET
@@ -40,14 +49,45 @@ export async function POST(request: Request) {
   })()
 
   if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    return NextResponse.json({ ok: false, reason: 'Firma inválida' }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, reason: 'Firma inválida' },
+      { status: 401 },
+    )
   }
 
-  let body: { commit?: string; ref?: string } = {}
+  let body: {
+    tarballUrl?: string
+    releaseId?: string
+    tag?: string
+    commit?: string
+  } = {}
   try {
     body = raw ? JSON.parse(raw) : {}
   } catch {
-    return NextResponse.json({ ok: false, reason: 'Body no es JSON válido' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, reason: 'Body no es JSON válido' },
+      { status: 400 },
+    )
+  }
+
+  // Validar tarballUrl: solo aceptar URLs HTTPS de github.com (los releases
+  // del repo). Esto previene que alguien con el secret apunte a un tarball
+  // malicioso.
+  const tarballUrl = String(body.tarballUrl ?? '')
+  if (!/^https:\/\/github\.com\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+\/releases\/download\//.test(tarballUrl)) {
+    return NextResponse.json(
+      { ok: false, reason: 'tarballUrl inválido (solo github.com/.../releases/download/)' },
+      { status: 400 },
+    )
+  }
+
+  // releaseId solo permite chars seguros (no path traversal).
+  const releaseId = String(body.releaseId ?? '').replace(/[^A-Za-z0-9_-]/g, '')
+  if (!releaseId || releaseId.length > 60) {
+    return NextResponse.json(
+      { ok: false, reason: 'releaseId inválido' },
+      { status: 400 },
+    )
   }
 
   const home = process.env.HOME ?? '/home/u530306321'
@@ -61,11 +101,9 @@ export async function POST(request: Request) {
     )
   }
 
-  // Lanzar el deploy en background — el script reinicia la app al final.
-  // Detached + ignored I/O para que no muera con esta request.
-  const ref = (body.ref ?? 'origin/main').replace(/[^A-Za-z0-9_/.\-]/g, '')
-  const commit = (body.commit ?? '').replace(/[^a-f0-9]/g, '').slice(0, 40)
-  const child = spawn('bash', [scriptPath, ref, commit], {
+  // Disparar el script en background — responde de inmediato, el script
+  // continúa solo y reinicia Passenger al final.
+  const child = spawn('bash', [scriptPath, tarballUrl, releaseId], {
     detached: true,
     stdio: 'ignore',
     cwd: path.dirname(scriptPath),
@@ -75,8 +113,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     started: true,
-    ref,
-    commit,
+    releaseId,
     pid: child.pid,
   })
 }

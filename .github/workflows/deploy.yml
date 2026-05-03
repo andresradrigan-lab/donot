@@ -9,57 +9,24 @@ concurrency:
   group: deploy-prod
   cancel-in-progress: false
 
-env:
-  DEPLOY_PORT: '65002'
+permissions:
+  contents: write # crear GitHub Releases
 
 jobs:
-  # Estrategia híbrida: si DEPLOY_HOOK_URL está configurado, usamos
-  # pull-based (webhook al app); si no, fallback a push SSH.
-  notify:
-    if: ${{ vars.DEPLOY_MODE == 'webhook' }}
+  build:
     runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Llamar al deploy hook
-        env:
-          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
-          DEPLOY_HOOK_SECRET: ${{ secrets.DEPLOY_HOOK_SECRET }}
-        run: |
-          BODY=$(printf '{"ref":"origin/main","commit":"%s"}' "${GITHUB_SHA}")
-          SIG=$(printf '%s' "${BODY}" | openssl dgst -sha256 -hmac "${DEPLOY_HOOK_SECRET}" -hex | sed 's/^.* //')
-          response=$(curl -sS -w "\n%{http_code}" \
-            -X POST "${DEPLOY_HOOK_URL}" \
-            -H "Content-Type: application/json" \
-            -H "X-Deploy-Signature: ${SIG}" \
-            --data "${BODY}")
-          body=$(echo "$response" | sed '$d')
-          code=$(echo "$response" | tail -1)
-          echo "Response: $body"
-          echo "HTTP: $code"
-          if [ "$code" != "200" ]; then exit 1; fi
-
-      - name: Esperar 90s y verificar health
-        run: |
-          sleep 90
-          for i in 1 2 3 4 5; do
-            status=$(curl -sS --max-time 10 -o /dev/null -w "%{http_code}" https://donot.cl/api/health || echo 000)
-            if [ "$status" = "200" ]; then
-              echo "✅  Health OK"
-              exit 0
-            fi
-            sleep 30
-          done
-          exit 1
-
-  push-deploy:
-    if: ${{ vars.DEPLOY_MODE != 'webhook' }}
-    runs-on: ubuntu-latest
-    environment: production
+    outputs:
+      release_id: ${{ steps.id.outputs.release_id }}
+      tag: ${{ steps.id.outputs.tag }}
+      tarball_url: ${{ steps.upload.outputs.url }}
     steps:
       - uses: actions/checkout@v4
 
       - id: id
-        run: echo "release_id=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+        run: |
+          REL="$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          echo "release_id=${REL}" >> "$GITHUB_OUTPUT"
+          echo "tag=deploy-${REL}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v4
         with:
@@ -77,56 +44,109 @@ jobs:
         env:
           DATABASE_URL: mysql://build:build@localhost:9999/build
 
-      - name: Empaquetar release (tar.gz)
+      - name: Prune dev dependencies
+        run: npm prune --omit=dev
+
+      - name: Crear wrapper server.js para Passenger
+        run: |
+          cat > server.js << 'WRAPPER'
+          // Wrapper que Passenger ejecuta. Carga .env, fija NODE_ENV y delega
+          // al server.js real del standalone build de Next.
+          const fs = require('fs')
+          const path = require('path')
+
+          const envFile = path.join(__dirname, '.env')
+          if (fs.existsSync(envFile)) {
+            for (const line of fs.readFileSync(envFile, 'utf8').split('\n')) {
+              const t = line.trim()
+              if (!t || t.startsWith('#')) continue
+              const m = t.match(/^([A-Z0-9_]+)=(.*)$/i)
+              if (!m) continue
+              let [, k, v] = m
+              if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+                v = v.slice(1, -1)
+              }
+              if (!process.env[k]) process.env[k] = v
+            }
+          }
+          process.env.NODE_ENV = process.env.NODE_ENV || 'production'
+          require(path.join(__dirname, '.next', 'standalone', 'server.js'))
+          WRAPPER
+
+      - name: Empaquetar tarball precompilado
         env:
           REL: ${{ steps.id.outputs.release_id }}
         run: |
+          # node_modules y static dentro del standalone para que server.js
+          # encuentre Prisma client + assets en runtime.
+          cp -r node_modules .next/standalone/node_modules
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+
           mkdir -p out
           tar -czf "out/${REL}.tar.gz" \
-            .next public prisma deploy node_modules lib \
-            ecosystem.config.js package.json package-lock.json tsconfig.json
+            .next \
+            prisma \
+            deploy \
+            package.json \
+            package-lock.json \
+            server.js
           ls -lh out/
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
-
-      - name: Add server to known_hosts
+      - name: Crear GitHub Release con el tarball
+        id: upload
         env:
-          HOST: ${{ secrets.DEPLOY_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p ${{ env.DEPLOY_PORT }} -H "$HOST" >> ~/.ssh/known_hosts
-
-      - name: Subir + descomprimir
-        env:
-          HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.id.outputs.tag }}
           REL: ${{ steps.id.outputs.release_id }}
         run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} "mkdir -p \$HOME/donot-platform/releases/${REL}"
-          scp -P ${{ env.DEPLOY_PORT }} "out/${REL}.tar.gz" "${USER}@${HOST}:donot-platform/releases/${REL}.tar.gz"
-          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} \
-            "tar -xzf \$HOME/donot-platform/releases/${REL}.tar.gz -C \$HOME/donot-platform/releases/${REL}/ && rm \$HOME/donot-platform/releases/${REL}.tar.gz"
+          gh release create "${TAG}" "out/${REL}.tar.gz" \
+            --title "Deploy ${REL}" \
+            --notes "Auto-deploy desde ${GITHUB_SHA}" \
+            --target "${GITHUB_SHA}"
 
-      - name: Activar release
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${REL}.tar.gz"
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+          echo "Tarball: ${URL}"
+
+  notify-webhook:
+    needs: build
+    if: ${{ vars.DEPLOY_MODE == 'webhook' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Disparar deploy hook
         env:
-          HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
-          REL: ${{ steps.id.outputs.release_id }}
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+          DEPLOY_HOOK_SECRET: ${{ secrets.DEPLOY_HOOK_SECRET }}
+          REL: ${{ needs.build.outputs.release_id }}
+          TAG: ${{ needs.build.outputs.tag }}
+          URL: ${{ needs.build.outputs.tarball_url }}
         run: |
-          ssh -p ${{ env.DEPLOY_PORT }} ${USER}@${HOST} \
-            "bash \$HOME/donot-platform/releases/${REL}/deploy/scripts/release.sh \$HOME/donot-platform/releases/${REL}"
+          BODY=$(printf '{"releaseId":"%s","tag":"%s","tarballUrl":"%s","commit":"%s"}' \
+            "${REL}" "${TAG}" "${URL}" "${GITHUB_SHA}")
+          SIG=$(printf '%s' "${BODY}" | openssl dgst -sha256 -hmac "${DEPLOY_HOOK_SECRET}" -hex | sed 's/^.* //')
+          response=$(curl -sS -w "\n%{http_code}" \
+            -X POST "${DEPLOY_HOOK_URL}" \
+            -H "Content-Type: application/json" \
+            -H "X-Deploy-Signature: ${SIG}" \
+            --data "${BODY}")
+          body=$(echo "$response" | sed '$d')
+          code=$(echo "$response" | tail -1)
+          echo "Response: $body"
+          echo "HTTP: $code"
+          [ "$code" = "200" ] || exit 1
 
-      - name: Health check
+      - name: Esperar 90s + health check
         run: |
-          sleep 8
-          for i in 1 2 3 4 5 6; do
-            if curl -fsS https://donot.cl/api/health > /dev/null; then
+          sleep 90
+          for i in 1 2 3 4 5; do
+            status=$(curl -sS --max-time 10 -o /dev/null -w "%{http_code}" https://donot.cl/api/health || echo 000)
+            if [ "$status" = "200" ]; then
               echo "✅  Health OK"
+              curl -s https://donot.cl/api/health
               exit 0
             fi
-            sleep 8
+            sleep 30
           done
           exit 1

@@ -220,8 +220,8 @@ export function CheckoutForm({ initialCouponCode }: Props) {
     <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[1.4fr_1fr] items-start">
       <div className="flex flex-col gap-5">
         {/* CONTACTO */}
-        <details open className="bg-white border border-donot-border rounded-2xl">
-          <summary className="cursor-pointer list-none px-5 py-4 flex items-center gap-3 font-display text-donot-verde text-lg">
+        <details open className="bg-white border border-donot-border rounded-[1.5rem] shadow-soft">
+          <summary className="cursor-pointer list-none px-6 py-5 flex items-center gap-3 font-display text-donot-verde text-2xl">
             <User size={20} /> Contacto
           </summary>
           <div className="px-5 pb-5 grid gap-3 sm:grid-cols-2">
@@ -258,8 +258,8 @@ export function CheckoutForm({ initialCouponCode }: Props) {
         </details>
 
         {/* DESPACHO */}
-        <details open className="bg-white border border-donot-border rounded-2xl">
-          <summary className="cursor-pointer list-none px-5 py-4 flex items-center gap-3 font-display text-donot-verde text-lg">
+        <details open className="bg-white border border-donot-border rounded-[1.5rem] shadow-soft">
+          <summary className="cursor-pointer list-none px-6 py-5 flex items-center gap-3 font-display text-donot-verde text-2xl">
             <MapPin size={20} /> Despacho
           </summary>
           <div className="px-5 pb-5 flex flex-col gap-4">
@@ -326,8 +326,8 @@ export function CheckoutForm({ initialCouponCode }: Props) {
         </details>
 
         {/* FECHA Y FRANJA */}
-        <details open className="bg-white border border-donot-border rounded-2xl">
-          <summary className="cursor-pointer list-none px-5 py-4 flex items-center gap-3 font-display text-donot-verde text-lg">
+        <details open className="bg-white border border-donot-border rounded-[1.5rem] shadow-soft">
+          <summary className="cursor-pointer list-none px-6 py-5 flex items-center gap-3 font-display text-donot-verde text-2xl">
             <Calendar size={20} /> Cuándo
           </summary>
           <div className="px-5 pb-5 grid gap-3 sm:grid-cols-2">
@@ -364,8 +364,8 @@ export function CheckoutForm({ initialCouponCode }: Props) {
         </details>
 
         {/* CUPÓN */}
-        <details className="bg-white border border-donot-border rounded-2xl">
-          <summary className="cursor-pointer list-none px-5 py-4 flex items-center gap-3 font-display text-donot-verde text-lg">
+        <details className="bg-white border border-donot-border rounded-[1.5rem] shadow-soft">
+          <summary className="cursor-pointer list-none px-6 py-5 flex items-center gap-3 font-display text-donot-verde text-2xl">
             <Tag size={20} /> Cupón
             {coupon && (
               <span className="ml-auto text-sm font-sans text-donot-naranjo">
@@ -379,8 +379,8 @@ export function CheckoutForm({ initialCouponCode }: Props) {
         </details>
 
         {/* PAGO */}
-        <details open className="bg-white border border-donot-border rounded-2xl">
-          <summary className="cursor-pointer list-none px-5 py-4 flex items-center gap-3 font-display text-donot-verde text-lg">
+        <details open className="bg-white border border-donot-border rounded-[1.5rem] shadow-soft">
+          <summary className="cursor-pointer list-none px-6 py-5 flex items-center gap-3 font-display text-donot-verde text-2xl">
             <Receipt size={20} /> Cómo pagas
           </summary>
           <div className="px-5 pb-5 grid gap-2 sm:grid-cols-3">
@@ -405,17 +405,24 @@ export function CheckoutForm({ initialCouponCode }: Props) {
       </div>
 
       {/* RESUMEN */}
-      <aside className="bg-donot-rowAlt border border-donot-border rounded-3xl p-6 lg:sticky lg:top-24 flex flex-col gap-5">
-        <h2 className="font-display text-2xl text-donot-verde">Resumen</h2>
+      <aside className="bg-white border border-donot-border rounded-[1.75rem] p-6 md:p-7 lg:sticky lg:top-24 flex flex-col gap-5 shadow-soft">
+        <div>
+          <span className="inline-block px-2.5 py-0.5 rounded-full bg-donot-verde/10 text-donot-verde text-[10px] font-bold uppercase tracking-[0.15em] mb-1.5">
+            Tu pedido
+          </span>
+          <h2 className="font-display text-3xl text-donot-verde leading-tight">
+            Resumen
+          </h2>
+        </div>
 
-        <ul className="text-sm text-donot-ink/85 space-y-1">
+        <ul className="text-sm text-donot-ink/85 space-y-2">
           {cart.items.map((it) => (
-            <li key={it.lineId} className="flex justify-between gap-3">
-              <span>
-                {it.boxName}
-                {it.quantity > 1 && ` × ${it.quantity}`}
+            <li key={it.lineId} className="flex justify-between gap-3 pb-2 border-b border-donot-border last:border-0">
+              <span className="leading-tight">
+                <strong className="block text-donot-verde">{it.boxName}{it.quantity > 1 && ` × ${it.quantity}`}</strong>
+                <span className="text-xs text-donot-muted">{it.slotCount} donas</span>
               </span>
-              <span className="font-semibold whitespace-nowrap">
+              <span className="font-bold whitespace-nowrap text-donot-naranjo">
                 {formatClp(it.boxPriceClp * it.quantity)}
               </span>
             </li>
@@ -447,9 +454,9 @@ export function CheckoutForm({ initialCouponCode }: Props) {
                   : formatClp(totals.shippingClp)}
             </dd>
           </div>
-          <div className="flex justify-between text-lg pt-2 border-t border-donot-border">
-            <dt className="font-display text-donot-verde">Total</dt>
-            <dd className="font-display text-donot-verde">
+          <div className="flex justify-between items-baseline pt-3 border-t-2 border-dashed border-donot-border">
+            <dt className="font-display text-xl text-donot-verde">Total</dt>
+            <dd className="font-display text-3xl text-donot-verde">
               {totals?.totalClp != null ? formatClp(totals.totalClp) : '—'}
             </dd>
           </div>
@@ -486,7 +493,7 @@ export function CheckoutForm({ initialCouponCode }: Props) {
 }
 
 const inputClass =
-  'w-full px-4 py-3 rounded-xl border border-donot-border bg-white focus:outline-none focus:border-donot-verde'
+  'w-full px-4 py-3 rounded-2xl border-2 border-donot-border bg-donot-crema/40 focus:outline-none focus:border-donot-verde focus:bg-white transition'
 
 function Field({
   label,

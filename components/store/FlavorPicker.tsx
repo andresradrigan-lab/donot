@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Minus, Plus, Check } from 'lucide-react'
+import { Minus, Plus, Check, ArrowRight, Sparkles } from 'lucide-react'
 import type { Flavor, Box } from '@prisma/client'
 import { cn } from '@/lib/utils'
 import { formatClp } from '@/lib/format'
@@ -33,7 +33,6 @@ export function FlavorPicker({ box, flavors }: Props) {
   const [selection, setSelection] = useState<Record<string, number>>({})
   const [hydrated, setHydrated] = useState(false)
 
-  // Recuperar progreso del configurador desde localStorage al montar.
   useEffect(() => {
     const validSlugs = new Set(flavors.map((f) => f.slug))
     const raw = readInProgress(box.slug)
@@ -51,7 +50,6 @@ export function FlavorPicker({ box, flavors }: Props) {
     setHydrated(true)
   }, [box.slug, box.slotCount, flavors])
 
-  // Persistir cambios mientras el usuario configura.
   useEffect(() => {
     if (!hydrated) return
     writeInProgress(box.slug, selection)
@@ -60,6 +58,7 @@ export function FlavorPicker({ box, flavors }: Props) {
   const total = totalSlotsSelected(selection)
   const remaining = box.slotCount - total
   const isComplete = total === box.slotCount
+  const progress = (total / box.slotCount) * 100
 
   function inc(slug: string) {
     if (total >= box.slotCount) return
@@ -112,50 +111,86 @@ export function FlavorPicker({ box, flavors }: Props) {
       ],
     })
 
-    // Abrimos el mini cart en la misma página en lugar de redirigir.
-    // El usuario puede sumar otra cajita o ir al carrito desde el drawer.
     openMiniCart()
   }
 
   return (
-    <section className="px-6 md:px-10 pt-8 md:pt-12 pb-32 md:pb-24 max-w-8xl mx-auto">
-      <ol className="flex items-center gap-3 text-sm text-donot-muted mb-6">
+    <section className="relative px-6 md:px-10 pt-8 md:pt-12 pb-32 md:pb-24 max-w-8xl mx-auto overflow-hidden">
+      {/* Decoración */}
+      <div
+        aria-hidden
+        className="absolute top-20 -right-32 w-96 h-96 rounded-full bg-donot-rosado/10 blur-3xl pointer-events-none"
+      />
+
+      {/* Stepper */}
+      <ol className="relative flex items-center gap-3 text-sm mb-6">
         <li className="flex items-center gap-2 text-donot-verde font-semibold">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-donot-verde text-donot-crema text-xs">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-donot-verde text-donot-crema">
             <Check size={14} />
           </span>
-          Caja elegida
+          Caja
         </li>
-        <li>·</li>
+        <li className="flex-1 h-[2px] bg-donot-verde/30 max-w-[3rem]" />
         <li className="flex items-center gap-2 text-donot-verde font-semibold">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-donot-naranjo text-white text-xs font-bold">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-donot-naranjo text-white text-xs font-bold">
             2
           </span>
-          Elige tus sabores
+          Sabores
         </li>
       </ol>
 
-      <header className="bg-donot-rowAlt rounded-3xl border border-donot-border p-5 md:p-7 mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl md:text-4xl text-donot-verde">
-            {box.name}
-          </h1>
-          <p className="text-donot-muted">
-            {box.slotCount} donas · {formatClp(box.priceClp)}
-          </p>
+      {/* Header sticky con progreso */}
+      <header className="relative bg-white rounded-[2rem] border border-donot-border shadow-soft p-5 md:p-7 mb-8 overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <span className="inline-block px-2.5 py-1 rounded-full bg-donot-rosado/15 text-donot-rosado text-[10px] font-bold uppercase tracking-[0.15em] mb-2">
+              Armando tu cajita
+            </span>
+            <h1 className="font-display text-3xl md:text-4xl text-donot-verde leading-tight">
+              {box.name.replace('Cajita ', '')}
+            </h1>
+            <p className="text-donot-muted mt-1">
+              {box.slotCount} donas · {formatClp(box.priceClp)}
+            </p>
+          </div>
+
+          <div
+            className={cn(
+              'inline-flex items-center gap-2 px-5 py-3 rounded-full font-display text-2xl border-2 transition shrink-0',
+              isComplete
+                ? 'bg-donot-verde text-donot-crema border-donot-verde shadow-pop'
+                : 'bg-donot-crema text-donot-verde border-donot-border',
+            )}
+            aria-live="polite"
+          >
+            {total}/{box.slotCount}
+            {isComplete && <Check size={20} />}
+          </div>
         </div>
-        <div
-          className={cn(
-            'inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-display text-2xl border-2 transition',
-            isComplete
-              ? 'bg-donot-verde text-donot-crema border-donot-verde'
-              : 'bg-white text-donot-verde border-donot-border',
+
+        {/* Barra de progreso */}
+        <div className="mt-4 h-2 bg-donot-rowAlt rounded-full overflow-hidden">
+          <div
+            className={cn(
+              'h-full transition-all duration-300 rounded-full',
+              isComplete ? 'bg-donot-verde' : 'bg-donot-naranjo',
+            )}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <p className="text-sm text-donot-muted mt-3">
+          {isComplete ? (
+            <>
+              <Sparkles size={14} className="inline text-donot-naranjo mr-1" />
+              ¡Cajita completa! Confirmá abajo para sumarla al carrito.
+            </>
+          ) : (
+            <>
+              Te {remaining === 1 ? 'falta 1 sabor' : `faltan ${remaining} sabores`}. Podés repetir los que quieras.
+            </>
           )}
-          aria-live="polite"
-        >
-          {total}/{box.slotCount}
-          {isComplete && <Check size={20} />}
-        </div>
+        </p>
       </header>
 
       {flavors.length === 0 ? (
@@ -163,7 +198,7 @@ export function FlavorPicker({ box, flavors }: Props) {
           Hoy no hay sabores disponibles para esta cajita. Vuelve más rato.
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="relative grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {flavors.map((flavor) => {
             const qty = selection[flavor.slug] ?? 0
             const canAdd = total < box.slotCount
@@ -171,45 +206,54 @@ export function FlavorPicker({ box, flavors }: Props) {
               <article
                 key={flavor.id}
                 className={cn(
-                  'bg-white rounded-2xl border border-donot-border shadow-soft overflow-hidden flex flex-col',
-                  qty > 0 && 'ring-2 ring-donot-naranjo border-donot-naranjo',
+                  'group bg-white rounded-2xl border-2 shadow-soft overflow-hidden flex flex-col transition-all duration-200',
+                  qty > 0
+                    ? 'border-donot-naranjo shadow-pop -translate-y-1'
+                    : 'border-donot-border hover:shadow-pop hover:-translate-y-0.5',
                 )}
               >
-                <div className="relative aspect-square bg-donot-rowAlt">
+                <div className="relative aspect-square bg-donot-rowAlt overflow-hidden">
                   <Image
                     src={flavor.imageUrl}
                     alt={flavor.name}
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-cover"
+                    className={cn(
+                      'object-cover transition-transform duration-500',
+                      qty === 0 && 'group-hover:scale-105',
+                    )}
                   />
                   {qty > 0 && (
-                    <span className="absolute top-3 right-3 inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-full bg-donot-naranjo text-white font-display text-sm">
-                      ×{qty}
-                    </span>
+                    <>
+                      <div className="absolute inset-0 bg-donot-naranjo/10 pointer-events-none" />
+                      <span className="absolute top-3 right-3 inline-flex items-center justify-center min-w-9 h-9 px-2.5 rounded-full bg-donot-naranjo text-white font-display text-base shadow-pop">
+                        ×{qty}
+                      </span>
+                    </>
                   )}
                 </div>
-                <div className="p-4 flex flex-col gap-3 flex-1">
-                  <h3 className="font-display text-lg text-donot-verde leading-tight">
+
+                <div className="p-4 flex flex-col gap-2 flex-1">
+                  <h3 className="font-display text-lg md:text-xl text-donot-verde leading-tight">
                     {flavor.name}
                   </h3>
                   <p className="text-donot-muted text-xs leading-relaxed line-clamp-3">
                     {flavor.description}
                   </p>
 
-                  <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                  <div className="mt-auto flex items-center justify-between gap-2 pt-3">
                     <button
                       type="button"
                       onClick={() => dec(flavor.slug)}
                       disabled={qty === 0}
                       aria-label={`Quitar una ${flavor.name}`}
-                      className="inline-flex items-center justify-center w-11 h-11 rounded-full border-2 border-donot-verde text-donot-verde hover:bg-donot-verde hover:text-donot-crema transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-donot-verde"
+                      className="inline-flex items-center justify-center w-11 h-11 rounded-full border-2 border-donot-verde text-donot-verde hover:bg-donot-verde hover:text-donot-crema transition disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-donot-verde"
                     >
                       <Minus size={18} />
                     </button>
                     <span
                       aria-live="polite"
-                      className="font-display text-xl text-donot-verde min-w-[2ch] text-center"
+                      className="font-display text-2xl text-donot-verde min-w-[2ch] text-center"
                     >
                       {qty}
                     </span>
@@ -218,7 +262,12 @@ export function FlavorPicker({ box, flavors }: Props) {
                       onClick={() => inc(flavor.slug)}
                       disabled={!canAdd}
                       aria-label={`Agregar una ${flavor.name}`}
-                      className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-donot-naranjo text-white hover:bg-donot-naranjo/90 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      className={cn(
+                        'inline-flex items-center justify-center w-11 h-11 rounded-full transition shadow-soft',
+                        canAdd
+                          ? 'bg-donot-naranjo text-white hover:bg-donot-naranjo/90'
+                          : 'bg-donot-border/50 text-donot-muted cursor-not-allowed',
+                      )}
                     >
                       <Plus size={18} />
                     </button>
@@ -230,26 +279,30 @@ export function FlavorPicker({ box, flavors }: Props) {
         </div>
       )}
 
-      {/* CTA sticky en mobile, normal en desktop */}
-      <div className="fixed bottom-0 inset-x-0 z-30 bg-donot-crema/95 backdrop-blur border-t border-donot-border md:static md:bg-transparent md:border-0 md:mt-10 md:flex md:justify-end">
-        <div className="max-w-8xl mx-auto px-6 py-4 md:px-0 md:py-0 flex items-center justify-between gap-4 md:justify-end md:gap-6">
-          <p className="text-donot-muted text-sm md:hidden">
-            {isComplete
-              ? '¡Listo! Confirma tu cajita.'
-              : `Te ${remaining === 1 ? 'falta 1' : `faltan ${remaining}`}.`}
-          </p>
+      {/* CTA sticky bottom — visible siempre en mobile y arriba del fold en desktop cuando complete */}
+      <div className="fixed bottom-0 inset-x-0 z-30 bg-donot-crema/95 backdrop-blur border-t border-donot-border md:static md:bg-transparent md:border-0 md:mt-12 md:flex md:justify-end">
+        <div className="max-w-8xl mx-auto px-6 py-4 md:px-0 md:py-0 w-full flex items-center justify-between gap-4 md:justify-end md:gap-6">
+          <div className="md:hidden flex-1">
+            <p className="text-xs text-donot-muted leading-tight">
+              {isComplete ? '¡Cajita lista!' : `Te ${remaining === 1 ? 'falta 1' : `faltan ${remaining}`}`}
+            </p>
+            <p className="font-sans font-bold text-donot-naranjo">
+              {formatClp(box.priceClp)}
+            </p>
+          </div>
           <button
             type="button"
             onClick={confirm}
             disabled={!isComplete}
             className={cn(
-              'inline-flex items-center justify-center px-6 py-3.5 rounded-full font-display text-lg transition',
+              'inline-flex items-center gap-2 px-6 md:px-8 py-3.5 rounded-full font-bold text-base md:text-lg transition shadow-soft',
               isComplete
-                ? 'bg-donot-naranjo text-white hover:bg-donot-naranjo/90'
+                ? 'bg-donot-naranjo text-white hover:bg-donot-naranjo/90 hover:shadow-pop'
                 : 'bg-donot-border/60 text-donot-muted cursor-not-allowed',
             )}
           >
-            Quiero estas donas
+            {isComplete ? 'Sumar al carrito' : 'Sigue eligiendo'}
+            {isComplete && <ArrowRight size={18} />}
           </button>
         </div>
       </div>

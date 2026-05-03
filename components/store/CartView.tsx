@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Minus, Plus, Trash2 } from 'lucide-react'
+import Image from 'next/image'
+import { Minus, Plus, Trash2, ArrowRight, Truck, Sparkles } from 'lucide-react'
 import {
   readCart,
   removeItem,
@@ -72,7 +73,11 @@ export function CartView() {
 
   const discount = coupon?.discountClp ?? 0
 
-  if (!cart) return <p className="text-donot-muted">Cargando…</p>
+  if (!cart) {
+    return (
+      <p className="text-donot-muted py-20 text-center">Cargando…</p>
+    )
+  }
 
   if (cart.items.length === 0) {
     return (
@@ -82,7 +87,7 @@ export function CartView() {
           message="Pásate al drop activo y arma una cajita."
         />
         <Link href="/droop/droop_001">
-          <Button>Ver el drop</Button>
+          <Button>Ver el drop activo →</Button>
         </Link>
       </div>
     )
@@ -104,7 +109,7 @@ export function CartView() {
   }
 
   // Banner de cross-selling: cuán cerca del envío gratis.
-  let freeShippingBanner: string | null = null
+  let freeShippingBanner: { text: string; success: boolean } | null = null
   if (freeShipping) {
     const { thresholdClp, minBoxes } = freeShipping
     const fitsByBoxes = minBoxes != null && boxCount >= minBoxes
@@ -113,98 +118,144 @@ export function CartView() {
       if (thresholdClp != null) {
         const missing = thresholdClp - (subtotal - discount)
         if (missing > 0 && missing <= thresholdClp) {
-          freeShippingBanner = `Te faltan ${formatClp(missing)} para envío gratis.`
+          freeShippingBanner = {
+            text: `Te faltan ${formatClp(missing)} para envío gratis.`,
+            success: false,
+          }
         }
       }
       if (!freeShippingBanner && minBoxes != null && minBoxes - boxCount > 0) {
         const missingBoxes = minBoxes - boxCount
-        freeShippingBanner = `Te ${
-          missingBoxes === 1 ? 'falta 1 caja' : `faltan ${missingBoxes} cajas`
-        } para envío gratis.`
+        freeShippingBanner = {
+          text: `Te ${
+            missingBoxes === 1 ? 'falta 1 caja' : `faltan ${missingBoxes} cajas`
+          } para envío gratis.`,
+          success: false,
+        }
       }
     } else {
-      freeShippingBanner = '¡Listo! Tu envío va por la casa.'
+      freeShippingBanner = { text: '¡Listo! Tu envío va por la casa.', success: true }
     }
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] items-start">
+    <div className="grid gap-8 lg:grid-cols-[1.25fr_1fr] items-start">
+      {/* Items */}
       <div className="flex flex-col gap-5">
-        {cart.items.map((it) => (
-          <article
-            key={it.lineId}
-            className="bg-white border border-donot-border rounded-2xl p-5 shadow-soft"
-          >
-            <div className="flex items-baseline justify-between mb-3 gap-3">
-              <h3 className="font-display text-xl text-donot-verde">
-                {it.boxName}
-              </h3>
-              <span className="font-display text-donot-naranjo whitespace-nowrap">
-                {formatClp(it.boxPriceClp * it.quantity)}
-              </span>
-            </div>
-            <ul className="text-donot-ink/85 text-sm space-y-1 mb-4">
-              {Object.entries(it.flavors).map(([slug, qty]) => (
-                <li key={slug}>
-                  <span className="text-donot-muted">{qty} ×</span>{' '}
-                  {it.flavorNames[slug] ?? slug}
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex items-center justify-between gap-3">
-              <div className="inline-flex items-center gap-2 border border-donot-border rounded-full">
-                <button
-                  type="button"
-                  onClick={() => modifyQty(it.lineId, -1)}
-                  className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-donot-rowAlt transition"
-                  aria-label="Restar una caja"
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="font-display min-w-[1.5ch] text-center">
-                  {it.quantity}
+        {cart.items.map((it) => {
+          const flavorEntries = Object.entries(it.flavors)
+          return (
+            <article
+              key={it.lineId}
+              className="bg-white border border-donot-border rounded-[1.75rem] p-5 md:p-6 shadow-soft hover:shadow-pop transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-donot-rosado/15 text-donot-rosado text-[10px] font-bold uppercase tracking-[0.15em] mb-1.5">
+                    {it.slotCount} donas
+                  </span>
+                  <h3 className="font-display text-2xl text-donot-verde leading-tight">
+                    {it.boxName.replace('Cajita ', '')}
+                  </h3>
+                </div>
+                <span className="font-sans font-bold text-xl text-donot-naranjo whitespace-nowrap">
+                  {formatClp(it.boxPriceClp * it.quantity)}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => modifyQty(it.lineId, +1)}
-                  className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-donot-rowAlt transition"
-                  aria-label="Sumar una caja"
-                >
-                  <Plus size={16} />
-                </button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/caja/${it.boxSlug}`}
-                  className="text-sm text-donot-verde font-semibold hover:underline"
-                >
-                  Editar sabores
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => drop(it.lineId)}
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-full text-donot-muted hover:text-donot-naranjo hover:bg-donot-naranjo/10 transition"
-                  aria-label="Quitar del carrito"
-                >
-                  <Trash2 size={16} />
-                </button>
+              {/* Thumbs de sabores */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {flavorEntries.map(([slug, qty]) => (
+                  <div
+                    key={slug}
+                    className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-donot-crema bg-donot-rowAlt shrink-0 shadow-sm"
+                    title={`${qty} × ${it.flavorNames[slug] ?? slug}`}
+                  >
+                    <Image
+                      src={`/menu/${slug}.png`}
+                      alt={it.flavorNames[slug] ?? slug}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                    {qty > 1 && (
+                      <span className="absolute -bottom-0 -right-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-donot-verde text-donot-crema text-[10px] font-bold border-2 border-white">
+                        {qty}
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
-            </div>
-          </article>
-        ))}
+
+              <p className="text-donot-muted text-xs mb-4 leading-relaxed">
+                {flavorEntries
+                  .map(([slug, qty]) => `${qty}× ${it.flavorNames[slug] ?? slug}`)
+                  .join(' · ')}
+              </p>
+
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-donot-border">
+                <div className="inline-flex items-center gap-1 bg-donot-crema rounded-full p-1">
+                  <button
+                    type="button"
+                    onClick={() => modifyQty(it.lineId, -1)}
+                    className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white transition"
+                    aria-label="Restar una caja"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span className="font-display text-lg min-w-[1.5ch] text-center text-donot-verde">
+                    {it.quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => modifyQty(it.lineId, +1)}
+                    className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white transition"
+                    aria-label="Sumar una caja"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Link
+                    href={`/caja/${it.boxSlug}`}
+                    className="text-sm text-donot-verde font-semibold hover:text-donot-naranjo transition px-3 py-2"
+                  >
+                    Editar sabores
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => drop(it.lineId)}
+                    className="inline-flex items-center justify-center w-10 h-10 rounded-full text-donot-muted hover:text-donot-naranjo hover:bg-donot-naranjo/10 transition"
+                    aria-label="Quitar del carrito"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            </article>
+          )
+        })}
 
         <Link
           href="/droop/droop_001"
-          className="text-donot-naranjo font-semibold hover:underline self-start"
+          className="inline-flex items-center gap-2 text-donot-naranjo font-bold hover:gap-3 transition-all self-start mt-2"
         >
-          + Sumar otra cajita
+          <Plus size={18} />
+          Sumar otra cajita
         </Link>
       </div>
 
-      <aside className="bg-donot-rowAlt border border-donot-border rounded-3xl p-6 lg:sticky lg:top-24 flex flex-col gap-5">
-        <h2 className="font-display text-2xl text-donot-verde">Resumen</h2>
+      {/* Resumen sticky */}
+      <aside className="bg-white border border-donot-border rounded-[1.75rem] p-6 md:p-7 lg:sticky lg:top-24 flex flex-col gap-5 shadow-soft">
+        <div>
+          <span className="inline-block px-2.5 py-0.5 rounded-full bg-donot-verde/10 text-donot-verde text-[10px] font-bold uppercase tracking-[0.15em] mb-1.5">
+            Resumen
+          </span>
+          <h2 className="font-display text-3xl text-donot-verde leading-tight">
+            Total <span className="italic text-donot-naranjo">parcial</span>
+          </h2>
+        </div>
 
         <CouponInput
           cart={cart}
@@ -220,44 +271,60 @@ export function CartView() {
           }}
         />
 
-        <dl className="text-donot-ink space-y-2">
+        <dl className="text-donot-ink space-y-2 text-sm">
           <div className="flex justify-between">
-            <dt>Subtotal</dt>
+            <dt className="text-donot-muted">Subtotal ({boxCount} {boxCount === 1 ? 'cajita' : 'cajitas'})</dt>
             <dd className="font-semibold">{formatClp(subtotal)}</dd>
           </div>
           {discount > 0 && (
             <div className="flex justify-between text-donot-naranjo">
-              <dt>Descuento</dt>
-              <dd className="font-semibold">−{formatClp(discount)}</dd>
+              <dt className="font-bold">Descuento {coupon?.code && `· ${coupon.code}`}</dt>
+              <dd className="font-bold">−{formatClp(discount)}</dd>
             </div>
           )}
           {coupon?.freeShipping && (
             <div className="flex justify-between text-donot-naranjo text-sm">
-              <dt>Envío</dt>
-              <dd className="font-semibold">Por la casa</dd>
+              <dt className="font-bold">Envío</dt>
+              <dd className="font-bold">Por la casa</dd>
             </div>
           )}
         </dl>
 
         {freeShippingBanner && (
-          <p className="text-sm text-donot-verde bg-donot-azulPastel/30 rounded-xl px-3 py-2">
-            {freeShippingBanner}
-          </p>
+          <div
+            className={`flex items-start gap-2.5 text-sm rounded-2xl px-4 py-3 ${
+              freeShippingBanner.success
+                ? 'bg-donot-verde/10 text-donot-verde'
+                : 'bg-donot-azulPastel/30 text-donot-verde'
+            }`}
+          >
+            {freeShippingBanner.success ? (
+              <Sparkles size={16} className="mt-0.5 shrink-0" />
+            ) : (
+              <Truck size={16} className="mt-0.5 shrink-0" />
+            )}
+            <span className="font-semibold leading-snug">{freeShippingBanner.text}</span>
+          </div>
         )}
 
-        <div className="border-t border-donot-border pt-4 flex justify-between text-lg">
-          <span className="font-display text-donot-verde">Total parcial</span>
-          <span className="font-display text-donot-verde">
+        <div className="border-t-2 border-dashed border-donot-border pt-4 flex justify-between items-baseline">
+          <span className="font-display text-xl text-donot-verde">Total</span>
+          <span className="font-display text-3xl text-donot-verde">
             {formatClp(subtotal - discount)}
           </span>
         </div>
-        <p className="text-xs text-donot-muted">
+
+        <p className="text-xs text-donot-muted leading-relaxed">
           El envío se calcula al ingresar tu comuna en el siguiente paso.
         </p>
 
-        <Link href={`/checkout${coupon ? `?cupon=${coupon.code}` : ''}`}>
-          <Button size="lg" className="w-full">
+        <Link
+          href={`/checkout${coupon ? `?cupon=${coupon.code}` : ''}`}
+          className="block"
+        >
+          <Button size="lg" className="w-full inline-flex items-center justify-center gap-2">
             Ir a pagar
+            <ArrowRight size={18} />
           </Button>
         </Link>
       </aside>

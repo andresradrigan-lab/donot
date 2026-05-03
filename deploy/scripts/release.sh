@@ -49,15 +49,13 @@ cp -r "${RELEASE_DIR}/.next/static" "${RELEASE_DIR}/.next/standalone/.next/stati
 cp -r "${RELEASE_DIR}/public" "${RELEASE_DIR}/.next/standalone/public"
 ln -sfn "${SHARED_DIR}/uploads" "${RELEASE_DIR}/.next/standalone/public/uploads"
 
-echo "==> Aplicando migraciones de Prisma…"
+echo "==> Aplicando migraciones (mariadb CLI, no Prisma engine)…"
+# Prisma 6 con adapter mariadb funciona en runtime, pero `prisma migrate
+# deploy` usa el query engine de Prisma que falla con MariaDB 11.x. Como
+# workaround aplicamos las migraciones con el cliente nativo de MariaDB,
+# llevando registro manual en la tabla _prisma_migrations.
 cd "${RELEASE_DIR}"
-# Cargamos DATABASE_URL del shared para correr `prisma migrate deploy`.
-set -a
-# shellcheck disable=SC1091
-. "${SHARED_DIR}/.env.production"
-set +a
-# Usamos el binario local del tarball (node_modules ya está dentro del release).
-node_modules/.bin/prisma migrate deploy
+bash "${RELEASE_DIR}/deploy/scripts/migrate-mariadb.sh"
 
 # Standalone necesita node_modules para ejecutar Prisma client en runtime.
 ln -sfn "${RELEASE_DIR}/node_modules" "${RELEASE_DIR}/.next/standalone/node_modules"

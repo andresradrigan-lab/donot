@@ -18,10 +18,8 @@
  * esos copies vienen del menú oficial entregado por el cliente.
  */
 
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/db'
 
 async function main() {
   console.log('🍩  Seeding donot. database...')

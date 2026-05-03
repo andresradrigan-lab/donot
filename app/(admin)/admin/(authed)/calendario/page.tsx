@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { prisma } from '@/lib/db'
-import { weekdaysFromJson } from '@/lib/catalog'
+import { weekdaysFromJson } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'

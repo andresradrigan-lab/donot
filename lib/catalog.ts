@@ -1,21 +1,12 @@
 import type { BoxCategory, Flavor, FlavorCategory } from '@prisma/client'
 import { prisma } from '@/lib/db'
+import { weekdaysFromJson } from '@/lib/weekdays'
 
 const BOX_TO_FLAVOR: Record<BoxCategory, FlavorCategory[]> = {
   PREMIUM: ['PREMIUM'],
   AZUCARADA: ['AZUCARADA'],
   MIX: ['PREMIUM', 'AZUCARADA'],
   COLAB: ['PREMIUM', 'AZUCARADA'],
-}
-
-export function weekdaysFromJson(value: unknown): number[] {
-  if (!Array.isArray(value)) return []
-  const out: number[] = []
-  for (const v of value) {
-    const n = Number(v)
-    if (Number.isInteger(n) && n >= 0 && n <= 6) out.push(n)
-  }
-  return out
 }
 
 /**

@@ -8,7 +8,7 @@ import { ImageUploader } from '@/components/admin/ImageUploader'
 import { WeekdayPicker } from '@/components/admin/WeekdayPicker'
 import { Button } from '@/components/ui/Button'
 import { formatClp } from '@/lib/format'
-import { weekdaysFromJson } from '@/lib/catalog'
+import { weekdaysFromJson } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
 
 interface Props {

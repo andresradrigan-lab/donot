@@ -8,7 +8,7 @@ import type { Flavor, Droop, FlavorCategory } from '@prisma/client'
 import { ImageUploader } from '@/components/admin/ImageUploader'
 import { WeekdayPicker } from '@/components/admin/WeekdayPicker'
 import { Button } from '@/components/ui/Button'
-import { weekdaysFromJson } from '@/lib/catalog'
+import { weekdaysFromJson } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
 
 type FlavorWithDroop = Flavor & { droop: { code: string; name: string } | null }

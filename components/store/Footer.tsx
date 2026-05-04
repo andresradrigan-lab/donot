@@ -30,9 +30,11 @@ export function Footer() {
           <Image
             src="/brand/do-not-rosado-horizontal.png"
             alt="donot."
-            width={300}
-            height={326}
-            className="h-20 md:h-24 w-auto"
+            width={1182}
+            height={1282}
+            quality={100}
+            sizes="200px"
+            className="h-24 md:h-28 w-auto object-contain"
           />
           <p className="text-donot-crema/85 leading-relaxed">
             Donas que no deberían existir.<br />
@@ -42,9 +44,11 @@ export function Footer() {
             <Image
               src="/brand/mascota-crema-verde.png"
               alt=""
-              width={120}
-              height={180}
-              className="h-20 w-auto"
+              width={507}
+              height={769}
+              quality={100}
+              sizes="80px"
+              className="h-20 w-auto object-contain"
             />
             <p className="font-display italic text-donot-rosado text-lg leading-tight">
               "Solo recuerda <br />no comerlas todas."
